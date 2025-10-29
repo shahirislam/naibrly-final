@@ -15,6 +15,11 @@ class BundleCard extends StatefulWidget {
   final bool isExpandable;
   final bool isExpanded;
   final VoidCallback? onToggleExpansion;
+  final int? participants;
+  final int? maxParticipants;
+  final String? serviceDate; // ISO string like 2025-06-10
+  final int? discountPercentage;
+  final String? publishedText;
 
   const BundleCard({
     Key? key,
@@ -29,6 +34,11 @@ class BundleCard extends StatefulWidget {
     this.isExpandable = true,
     this.isExpanded = false,
     this.onToggleExpansion,
+    this.participants,
+    this.maxParticipants,
+    this.serviceDate,
+    this.discountPercentage,
+    this.publishedText,
   }) : super(key: key);
 
   @override
@@ -38,6 +48,15 @@ class BundleCard extends StatefulWidget {
 class _BundleCardState extends State<BundleCard> {
   @override
   Widget build(BuildContext context) {
+    final int participants = widget.participants ?? 0;
+    final int maxParticipants = widget.maxParticipants ?? 0;
+    final int openSpots = (maxParticipants - participants).clamp(0, 999);
+    final String capacityText = maxParticipants > 0
+        ? "$maxParticipants-Person Bundle ($participants Joined, $openSpots Spot${openSpots == 1 ? '' : 's'} Open)"
+        : widget.bundleDescription;
+
+    final String? formattedDate = _formatDate(widget.serviceDate);
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -59,7 +78,7 @@ class _BundleCardState extends State<BundleCard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Service Title and Bundle Description Row
+          // Service Title and actions
           Row(
             children: [
               Expanded(
@@ -72,37 +91,63 @@ class _BundleCardState extends State<BundleCard> {
                       fontWeight: FontWeight.bold,
                       color: Colors.black,
                     ),
-                    const SizedBox(height: 4),
-                    AppText(
-                      widget.bundleDescription,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w400,
-                      color: Colors.grey,
-                    ),
+                    if (widget.isExpanded && (widget.publishedText ?? '').isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      AppText(
+                        widget.publishedText ?? '',
+                        fontSize: 12,
+                        fontWeight: FontWeight.w400,
+                        color: Colors.grey,
+                      ),
+                    ],
+                    if (!widget.isExpanded) ...[
+                      const SizedBox(height: 6),
+                      AppText(
+                        capacityText,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w400,
+                        color: Colors.grey,
+                      ),
+                      const SizedBox(height: 6),
+                      if (formattedDate != null)
+                        AppText(
+                          "Service Date: $formattedDate",
+                          fontSize: 13,
+                          fontWeight: FontWeight.w400,
+                          color: Colors.grey,
+                        ),
+                    ]
+                    else ...[
+                      // const SizedBox(height: 4),
+                      // AppText(
+                      //   widget.bundleDescription,
+                      //   fontSize: 12,
+                      //   fontWeight: FontWeight.w400,
+                      //   color: Colors.grey,
+                      // ),
+                    ]
                   ],
                 ),
               ),
-              // Joined Users Avatars
-              Stack(
+              // Actions: share + expand
+              Row(
                 children: [
-                  _buildUserAvatar(),
-                  Positioned(
-                    left: 20,
-                    child: _buildUserAvatar(),
+                  IosTapEffect(
+                    onTap: () {},
+                    child: const Icon(Icons.share_outlined, size: 20, color: Colors.black87),
                   ),
+                  const SizedBox(width: 8),
+                  if (widget.isExpandable)
+                    IosTapEffect(
+                      onTap: widget.onToggleExpansion ?? () {},
+                      child: Icon(
+                        widget.isExpanded ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_right,
+                        color: Colors.grey,
+                        size: 20,
+                      ),
+                    ),
                 ],
               ),
-              const SizedBox(width: 8),
-              // Expand/Collapse Icon (only if expandable)
-              if (widget.isExpandable)
-                IosTapEffect(
-                  onTap: widget.onToggleExpansion ?? () {},
-                  child: Icon(
-                    widget.isExpanded ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_right,
-                    color: Colors.grey,
-                    size: 20,
-                  ),
-                ),
             ],
           ),
           
@@ -111,87 +156,144 @@ class _BundleCardState extends State<BundleCard> {
           // Expanded Content
           if (widget.isExpanded && widget.isExpandable) ...[
             const SizedBox(height: 16),
-            
+            // Capacity + Service date (expanded view)
+            AppText(
+              capacityText,
+              fontSize: 13,
+              fontWeight: FontWeight.w400,
+              color: Colors.grey,
+            ),
+            if (formattedDate != null) ...[
+              const SizedBox(height: 8),
+              AppText(
+                "Service Date: $formattedDate",
+                fontSize: 13,
+                fontWeight: FontWeight.w400,
+                color: Colors.grey,
+              ),
+            ],
+            const SizedBox(height: 12),
+
             // Provider Information
             for (int i = 0; i < widget.providers.length; i++) ...[
               _buildProviderInfo(widget.providers[i]),
               if (i < widget.providers.length - 1) const SizedBox(height: 8),
             ],
-            
             const SizedBox(height: 16),
-            
-            // Total Benefits Section
-            const AppText(
-              "Total Benefits:",
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
+            // Rates two-column
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const AppText(
+                        "Standard rates est.",
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.black,
+                      ),
+                      const SizedBox(height: 4),
+                      AppText(
+                        "${widget.discountedPrice}/hr",
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.grey,
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const AppText(
+                        "Standard rates est.",
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.black,
+                      ),
+                      const SizedBox(height: 4),
+                      AppText(
+                        widget.discountPercentage != null
+                            ? "${widget.discountPercentage}% off"
+                            : "5-10% off",
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.grey,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 8),
-            
-            for (String benefit in widget.benefits)
-              _buildBenefitItem(benefit),
-
-            const SizedBox(height: 15),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: ElevatedButton(
+                onPressed: widget.onJoinBundle ?? () {},
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                  elevation: 0,
+                ),
+                child: const Text(
+                  "Join Bundle",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ),
           ],
 
-          // Pricing Row (always visible)
-          Row(
-            children: [
-              // Original Price (Strikethrough)
-              RichText(
-                text: TextSpan(
-                  text: widget.originalPrice,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.red,
-                    decoration: TextDecoration.lineThrough,
-                    decorationColor: Colors.red,
-                    decorationThickness: 2.0,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              // Discounted Price
-              AppText(
-                widget.discountedPrice,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
-              ),
-              const SizedBox(width: 8),
-              // Savings
-              AppText(
-                widget.savings,
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: Colors.grey,
-              ),
-              const Spacer(),
-              // Join Bundle Button
-              IosTapEffect(
-                onTap: widget.onJoinBundle ?? () {},
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: widget.isExpanded ? AppColors.primary : Colors.transparent,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
+          // Collapsed Actions (More Info + Join)
+          if (!widget.isExpanded) ...[
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: widget.onToggleExpansion ?? () {},
+                    style: OutlinedButton.styleFrom(
+                      side: BorderSide(color: AppColors.primary, width: 1),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: AppText(
+                      "More Info",
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
                       color: AppColors.primary,
-                      width: 1,
                     ),
                   ),
-                  child: AppText(
-                    "Join Bundle",
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: widget.isExpanded ? Colors.white : AppColors.primary,
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: widget.onJoinBundle ?? () {},
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      elevation: 0,
+                    ),
+                    child: const Text(
+                      "Join Bundle",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            ),
+          ],
         ],
       ),
     );
@@ -280,5 +382,18 @@ class _BundleCardState extends State<BundleCard> {
         ],
       ),
     );
+  }
+}
+
+String? _formatDate(String? iso) {
+  if (iso == null || iso.isEmpty) return null;
+  try {
+    final dt = DateTime.tryParse(iso);
+    if (dt == null) return null;
+    const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    final m = months[dt.month - 1];
+    return "$m ${dt.day}, ${dt.year}";
+  } catch (_) {
+    return null;
   }
 }

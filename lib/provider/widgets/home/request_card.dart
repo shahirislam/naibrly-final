@@ -175,7 +175,7 @@ class RequestCard extends StatelessWidget {
             children: [
               Expanded(
                 child: KoreButton(
-                  text: 'Cancel',
+                  text: 'Decline',
                   onPressed: onCancel ?? () {},
                   isPrimary: false,
                   isCancel: true,

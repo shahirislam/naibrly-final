@@ -4,6 +4,9 @@ import '../widgets/button.dart';
 import '../widgets/colors.dart';
 import '../widgets/textfield.dart';
 import '../widgets/upload_card.dart';
+import '../widgets/business_hours_bottom_sheet.dart';
+import '../widgets/custom_multi_select_dropdown.dart';
+import '../widgets/custom_single_select_dropdown.dart';
 
 class YourInformationScreen extends StatefulWidget {
   const YourInformationScreen({super.key});
@@ -18,8 +21,36 @@ class _YourInformationScreenState extends State<YourInformationScreen> {
   String selectedEndDay = "Fri";
   String selectedStartTime = "9:00 am";
   String selectedEndTime = "5:00 pm";
-  String selectedRole = "Owner";
-  String selectedService = "Home Repairs & Maintenance";
+  String? selectedRole;
+  final List<String> roleOptions = ["Owner", "Manager", "Operator"];
+  List<String> selectedServices = [];
+  final List<String> availableServices = [
+    "Home Repairs & Maintenance",
+    "Cleaning & Organization",
+    "Renovations & Upgrades",
+    "Electrical Services",
+    "Plumbing Services",
+    "HVAC Services",
+  ];
+  
+  final TextEditingController hourlyRateController = TextEditingController(text: "10");
+  
+  // Business hours state - all days closed by default
+  List<DayHours> businessHours = [
+    DayHours(dayName: "Sunday", isOpen: false),
+    DayHours(dayName: "Monday", isOpen: false),
+    DayHours(dayName: "Tuesday", isOpen: false),
+    DayHours(dayName: "Wednesday", isOpen: false),
+    DayHours(dayName: "Thursday", isOpen: false),
+    DayHours(dayName: "Friday", isOpen: false),
+    DayHours(dayName: "Saturday", isOpen: false),
+  ];
+
+  @override
+  void dispose() {
+    hourlyRateController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -90,29 +121,20 @@ class _YourInformationScreenState extends State<YourInformationScreen> {
             const SizedBox(height: 16),
 
             // Role dropdown
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.grey.shade300),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: DropdownButton<String>(
-                underline: const SizedBox(),
-                isExpanded: true,
-                value: selectedRole,
-                hint: const Text("Select your role"),
-                items: const [
-                  DropdownMenuItem(value: "Owner", child: Text("Owner")),
-                  DropdownMenuItem(value: "Manager", child: Text("Manager")),
-                  DropdownMenuItem(value: "Operator", child: Text("Operator")),
-                ],
-                onChanged: (value) {
-                  setState(() {
-                    selectedRole = value!;
-                  });
-                },
-              ),
+            const Text(
+              "Role",
+              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+            ),
+            const SizedBox(height: 8),
+            CustomSingleSelectDropdown(
+              hint: "Select your role",
+              items: roleOptions,
+              selectedItem: selectedRole,
+              onChanged: (value) {
+                setState(() {
+                  selectedRole = value;
+                });
+              },
             ),
             const SizedBox(height: 16),
 
@@ -222,94 +244,169 @@ class _YourInformationScreenState extends State<YourInformationScreen> {
             ),
             const SizedBox(height: 24),
 
-            // Business Service Days
-            const Text(
-              "Business Service Days",
-              style: TextStyle(fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildDropdown(["Mon", "Tue", "Wed", "Thu", "Fri"], selectedStartDay, (value) {
-                    setState(() {
-                      selectedStartDay = value!;
-                    });
-                  }),
-                ),
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 8),
-                  child: Text("to"),
-                ),
-                Expanded(
-                  child: _buildDropdown(["Mon", "Tue", "Wed", "Thu", "Fri"], selectedEndDay, (value) {
-                    setState(() {
-                      selectedEndDay = value!;
-                    });
-                  }),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-
             // Business Hours
             const Text(
               "Business Hours",
-              style: TextStyle(fontWeight: FontWeight.w600),
+              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
             ),
             const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildDropdown(["9:00 am", "10:00 am"], selectedStartTime, (value) {
-                    setState(() {
-                      selectedStartTime = value!;
-                    });
-                  }),
+            InkWell(
+              onTap: () {
+                _showBusinessHoursBottomSheet();
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey.shade300),
                 ),
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 8),
-                  child: Text("to"),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            "Set Your Business Hours",
+                            style: TextStyle(
+                              color: Color(0xFF1C1C1C),
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            _getBusinessHoursSummary(),
+                            style: TextStyle(
+                              color: Colors.grey.shade600,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Icon(Icons.chevron_right, color: Colors.grey.shade400),
+                  ],
                 ),
-                Expanded(
-                  child: _buildDropdown(["5:00 pm", "6:00 pm"], selectedEndTime, (value) {
-                    setState(() {
-                      selectedEndTime = value!;
-                    });
-                  }),
-                ),
-              ],
+              ),
             ),
             const SizedBox(height: 20),
 
             // Services Provided
             const Text(
               "Services Provided",
-              style: TextStyle(fontWeight: FontWeight.w600),
+              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
             ),
             const SizedBox(height: 8),
+            CustomMultiSelectDropdown(
+              hint: "Select Services",
+              items: availableServices,
+              selectedItems: selectedServices,
+              onChanged: (selected) {
+                setState(() {
+                  selectedServices = selected;
+                });
+              },
+            ),
+            const SizedBox(height: 20),
+            
+            // Hourly Rate Section
             Container(
+              padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: const Color(0xFF0E7A60).withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.grey.shade300),
+                border: Border.all(color: const Color(0xFF0E7A60), width: 0.5),
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: DropdownButton<String>(
-                underline: const SizedBox(),
-                isExpanded: true,
-                value: selectedService,
-                hint: const Text("Select services"),
-                items: const [
-                  DropdownMenuItem(value: "Home Repairs & Maintenance", child: Text("Home Repairs & Maintenance")),
-                  DropdownMenuItem(value: "Cleaning & Organization", child: Text("Cleaning & Organization")),
-                  DropdownMenuItem(value: "Renovations & Upgrades", child: Text("Renovations & Upgrades")),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF0E7A60),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      const Text(
+                        "Enter Your Hourly Rate",
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF1C1C1C),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  const Padding(
+                    padding: EdgeInsets.only(left: 18),
+                    child: Text(
+                      "Set how much you charge per hour",
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Color(0xFF1C1C1C),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.grey.shade300),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade100,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Center(
+                            child: Text(
+                              "\$",
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF888888),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: TextField(
+                            controller: hourlyRateController,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(
+                              border: InputBorder.none,
+                              hintText: "10",
+                              hintStyle: TextStyle(
+                                color: Color(0xFF888888),
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                              color: Color(0xFF1C1C1C),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
-                onChanged: (value) {
-                  setState(() {
-                    selectedService = value!;
-                  });
-                },
               ),
             ),
             const SizedBox(height: 8),
@@ -351,6 +448,55 @@ class _YourInformationScreenState extends State<YourInformationScreen> {
         onChanged: onChanged,
       ),
     );
+  }
+
+  void _showBusinessHoursBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => BusinessHoursBottomSheet(
+        initialHours: businessHours,
+        onSave: (hours) {
+          setState(() {
+            businessHours = hours;
+          });
+        },
+      ),
+    );
+  }
+
+  String _getBusinessHoursSummary() {
+    final openDays = businessHours.where((day) => day.isOpen).toList();
+    if (openDays.isEmpty) {
+      return "No hours set";
+    }
+    
+    // Get the first and last open days
+    final firstDay = openDays.first.dayName.substring(0, 3);
+    final lastDay = openDays.last.dayName.substring(0, 3);
+    
+    // Check if all open days have the same hours
+    final sampleTime = "${_formatTime(openDays.first.startTime)} - ${_formatTime(openDays.first.endTime)}";
+    bool allSameHours = openDays.every((day) => 
+      day.startTime.hour == openDays.first.startTime.hour && 
+      day.startTime.minute == openDays.first.startTime.minute &&
+      day.endTime.hour == openDays.first.endTime.hour &&
+      day.endTime.minute == openDays.first.endTime.minute
+    );
+    
+    if (allSameHours && openDays.length == 7 - businessHours.where((day) => !day.isOpen).length) {
+      return "$firstDay - $lastDay • $sampleTime";
+    }
+    
+    return "${openDays.length} days configured";
+  }
+
+  String _formatTime(TimeOfDay time) {
+    final hour = time.hourOfPeriod;
+    final minute = time.minute.toString().padLeft(2, '0');
+    final period = time.period == DayPeriod.am ? 'AM' : 'PM';
+    return '$hour:$minute $period';
   }
 }
 

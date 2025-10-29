@@ -195,7 +195,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       keyboardType: TextInputType.number,
                       decoration: InputDecoration(
 
-                        hintText: "Zip code",
+                        hintText: "59856",
                         border: InputBorder.none,
                         isCollapsed: true,
                         hintStyle: TextStyle(

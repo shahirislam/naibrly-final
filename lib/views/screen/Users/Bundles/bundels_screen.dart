@@ -172,6 +172,11 @@ class _BundelsScreenState extends State<BundelsScreen> {
                              savings: '-\$${bundle['originalPrice'] - bundle['discountedPrice']}',
                              providers: List<Map<String, dynamic>>.from(bundle['providers'] ?? []),
                              benefits: List<String>.from(bundle['benefits'] ?? []),
+                             participants: bundle['participants'],
+                             maxParticipants: bundle['maxParticipants'],
+                             serviceDate: bundle['expiryDate'],
+                             discountPercentage: bundle['discountPercentage'],
+                             publishedText: 'Published 1hr ago',
                              isExpanded: expandedIndex == index,
                              onToggleExpansion: () {
                                setState(() {

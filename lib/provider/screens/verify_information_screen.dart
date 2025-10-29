@@ -5,6 +5,7 @@ import '../widgets/colors.dart';
 import '../widgets/dropdown.dart';
 import '../widgets/textfield.dart';
 import '../widgets/upload_card.dart';
+import '../widgets/custom_single_select_dropdown.dart';
 
 class VerifyInformationScreen extends StatefulWidget {
   const VerifyInformationScreen({super.key});
@@ -22,6 +23,19 @@ class _VerifyInformationScreenState extends State<VerifyInformationScreen> {
 
   String? selectedState;
   bool isDifferentOwner = true;
+  
+  final List<String> usStates = [
+    "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado",
+    "Connecticut", "Delaware", "Florida", "Georgia", "Hawaii", "Idaho",
+    "Illinois", "Indiana", "Iowa", "Kansas", "Kentucky", "Louisiana",
+    "Maine", "Maryland", "Massachusetts", "Michigan", "Minnesota",
+    "Mississippi", "Missouri", "Montana", "Nebraska", "Nevada",
+    "New Hampshire", "New Jersey", "New Mexico", "New York", "North Carolina",
+    "North Dakota", "Ohio", "Oklahoma", "Oregon", "Pennsylvania",
+    "Rhode Island", "South Carolina", "South Dakota", "Tennessee", "Texas",
+    "Utah", "Vermont", "Virginia", "Washington", "West Virginia",
+    "Wisconsin", "Wyoming"
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -77,13 +91,19 @@ class _VerifyInformationScreenState extends State<VerifyInformationScreen> {
             const SizedBox(height: 20),
 
             // Business Registered In
-            KoreDropdown(
-              label: "Business is registered in",
-              hint: "USA state",
-              items: const ["USA state", "Canada province"],
+            const Text(
+              "Business is registered in",
+              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+            ),
+            const SizedBox(height: 8),
+            CustomSingleSelectDropdown(
+              hint: "Select USA state",
+              items: usStates,
               selectedItem: selectedState,
               onChanged: (value) {
-                setState(() => selectedState = value);
+                setState(() {
+                  selectedState = value;
+                });
               },
             ),
             const SizedBox(height: 20),

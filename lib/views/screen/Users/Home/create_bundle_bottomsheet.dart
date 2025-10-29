@@ -4,6 +4,7 @@ import 'package:naibrly/utils/app_colors.dart';
 import 'package:naibrly/views/base/AppText/appText.dart';
 import 'package:naibrly/views/base/Ios_effect/iosTapEffect.dart';
 import 'package:naibrly/views/screen/Users/Home/bundle_published_bottomsheet.dart';
+import 'package:naibrly/provider/widgets/custom_single_select_dropdown.dart';
 
 class CreateBundleBottomSheet extends StatefulWidget {
   const CreateBundleBottomSheet({super.key});
@@ -14,6 +15,10 @@ class CreateBundleBottomSheet extends StatefulWidget {
 
 class _CreateBundleBottomSheetState extends State<CreateBundleBottomSheet> {
   String? selectedCategory;
+  // Dropdown states
+  String? selectedPrimary;
+  String? selectedSecondary;
+  String? selectedTertiary;
   DateTime? fromDate;
   DateTime? toDate;
   TimeOfDay? fromTime;
@@ -29,6 +34,48 @@ class _CreateBundleBottomSheetState extends State<CreateBundleBottomSheet> {
     'Maintenance'
   ];
 
+  // Primary dropdown options
+  final List<String> primaryOptions = [
+    'Interior',
+    'Exterior',
+    'More Services',
+    'House Painter',
+  ];
+
+  // Secondary options mapped by primary selection
+  final Map<String, List<String>> secondaryByPrimary = {
+    'Interior': [
+      'Home Repairs & Maintenance',
+      'Cleaning & Organization',
+      'Renovations & Upgrades',
+    ],
+    'Exterior': [
+      'Exterior Home Care',
+      'Landscaping & Outdoor Services',
+    ],
+    'More Services': [
+      'Moving',
+      'Installation & Assembly',
+    ],
+    'House Painter': [
+      'Interior Painting',
+      'Exterior Painting',
+    ],
+  };
+
+  // Tertiary options mapped by secondary selection (sample specific services)
+  final Map<String, List<String>> tertiaryBySecondary = {
+    'Home Repairs & Maintenance': ['Electrical', 'Plumbing', 'HVAC'],
+    'Cleaning & Organization': ['Deep Cleaning', 'Standard Cleaning'],
+    'Renovations & Upgrades': ['Kitchen Remodel', 'Bathroom Remodel'],
+    'Exterior Home Care': ['Window Washing', 'Roof Cleaning'],
+    'Landscaping & Outdoor Services': ['Lawn Mowing', 'Hedge Trimming'],
+    'Moving': ['Local Moving', 'Long Distance'],
+    'Installation & Assembly': ['Furniture Assembly', 'Appliance Installation'],
+    'Interior Painting': ['Walls', 'Ceilings'],
+    'Exterior Painting': ['Walls', 'Fences'],
+  };
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -42,7 +89,7 @@ class _CreateBundleBottomSheetState extends State<CreateBundleBottomSheet> {
           topRight: Radius.circular(20),
         ),
       ),
-      child: IntrinsicHeight(
+      child: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(20.0),
           child: Column(
@@ -71,7 +118,7 @@ class _CreateBundleBottomSheetState extends State<CreateBundleBottomSheet> {
             ),
             const SizedBox(height: 30),
             
-            // Category Selection Section
+            // Primary/Secondary/Tertiary Dropdowns
             const AppText(
               "Select Category*",
               fontSize: 16,
@@ -79,54 +126,64 @@ class _CreateBundleBottomSheetState extends State<CreateBundleBottomSheet> {
               color: Colors.black,
             ),
             const SizedBox(height: 12),
-            
-            // Selected Categories Chips
+
+            // Primary + Secondary (side by side)
             Row(
               children: [
                 Expanded(
-                  child: _buildCategoryChip("Interior"),
+                  child: CustomSingleSelectDropdown(
+                    hint: "Select Primary",
+                    items: primaryOptions,
+                    selectedItem: selectedPrimary,
+                    onChanged: (value) {
+                      setState(() {
+                        selectedPrimary = value;
+                        // reset dependent selections
+                        selectedSecondary = null;
+                        selectedTertiary = null;
+                      });
+                    },
+                  ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 12),
                 Expanded(
-                  child: _buildCategoryChip("Door & window..."),
+                  child: Opacity(
+                    opacity: selectedPrimary == null ? 0.5 : 1,
+                    child: IgnorePointer(
+                      ignoring: selectedPrimary == null,
+                      child: CustomSingleSelectDropdown(
+                        hint: "Select Service",
+                        items: secondaryByPrimary[selectedPrimary] ?? [],
+                        selectedItem: selectedSecondary,
+                        onChanged: (value) {
+                          setState(() {
+                            selectedSecondary = value;
+                            selectedTertiary = null;
+                          });
+                        },
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
-            
-            // Dropdown for selecting category
-            Container(
-              height: 48,
-              decoration: BoxDecoration(
-                border: Border.all(
-                  color: Colors.red, // Red border as shown in design
-                  width: 1.5,
+            const SizedBox(height: 12),
+
+            // Tertiary dropdown depends on secondary
+            Opacity(
+              opacity: selectedSecondary == null ? 0.5 : 1,
+              child: IgnorePointer(
+                ignoring: selectedSecondary == null,
+                child: CustomSingleSelectDropdown(
+                  hint: "Select Specific Service",
+                  items: tertiaryBySecondary[selectedSecondary] ?? [],
+                  selectedItem: selectedTertiary,
+                  onChanged: (value) {
+                    setState(() {
+                      selectedTertiary = value;
+                    });
+                  },
                 ),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: DropdownButtonFormField<String>(
-                value: selectedCategory,
-                decoration: const InputDecoration(
-                  hintText: "Select one",
-                  hintStyle: TextStyle(
-                    color: Colors.grey,
-                    fontSize: 14,
-                  ),
-                  border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                ),
-                items: categories.map((String category) {
-                  return DropdownMenuItem<String>(
-                    value: category,
-                    child: Text(category),
-                  );
-                }).toList(),
-                onChanged: (String? newValue) {
-                  setState(() {
-                    selectedCategory = newValue;
-                  });
-                },
-                icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
               ),
             ),
             const SizedBox(height: 24),
