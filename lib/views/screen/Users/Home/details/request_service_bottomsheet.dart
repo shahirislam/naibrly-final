@@ -358,6 +358,7 @@ class _RequestServiceBottomSheetState extends State<RequestServiceBottomSheet> {
   void _showSuccessBottomSheet() {
     showModalBottomSheet(
       context: context,
+      useSafeArea: true,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => RequestSuccessBottomSheet(
@@ -369,6 +370,7 @@ class _RequestServiceBottomSheetState extends State<RequestServiceBottomSheet> {
   void _showFailedBottomSheet() {
     showModalBottomSheet(
       context: context,
+      useSafeArea: true,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => RequestFailedBottomSheet(

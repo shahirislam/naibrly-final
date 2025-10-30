@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/custom_single_select_dropdown.dart';
 
 class UpdateInformationScreen extends StatefulWidget {
   const UpdateInformationScreen({super.key});
@@ -251,17 +252,31 @@ class _UpdateInformationScreenState extends State<UpdateInformationScreen> {
             ),
             const SizedBox(height: 16),
 
-            _buildDropdownField(
-              label: "Select your role",
-              value: _selectedRole,
-              items: const ["Owner", "Manager", "Employee"],
-              onChanged: (value) => setState(() => _selectedRole = value ?? ""),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "Select your role",
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 12,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                CustomSingleSelectDropdown(
+                  hint: "Select your role",
+                  items: const ["Owner", "Manager", "Employee"],
+                  selectedItem: _selectedRole.isEmpty ? null : _selectedRole,
+                  onChanged: (value) => setState(() => _selectedRole = value ?? ""),
+                ),
+              ],
             ),
             const SizedBox(height: 16),
 
             _buildTextField(
               label: "Address",
               controller: _addressController,
+              readOnly: true,
             ),
             const SizedBox(height: 16),
 
@@ -371,6 +386,7 @@ class _UpdateInformationScreenState extends State<UpdateInformationScreen> {
     required String label,
     required TextEditingController controller,
     String? hintText,
+    bool readOnly = false,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -385,6 +401,7 @@ class _UpdateInformationScreenState extends State<UpdateInformationScreen> {
         const SizedBox(height: 8),
         TextField(
           controller: controller,
+          readOnly: readOnly,
           decoration: InputDecoration(
             hintText: hintText,
             border: OutlineInputBorder(

@@ -2,12 +2,11 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:naibrly/models/user_request.dart';
 import 'package:naibrly/models/quick_message.dart';
-import 'package:naibrly/services/quick_message_service.dart';
 import 'package:naibrly/utils/app_colors.dart';
 import 'package:naibrly/views/base/AppText/appText.dart';
-import 'package:naibrly/widgets/quick_messages/add_quick_chat_bottom_sheet.dart';
-import 'package:naibrly/views/screen/Users/Request/user_quick_chats_screen.dart';
+// Preset quick questions only; add/edit screens not used
 import 'package:naibrly/widgets/payment_confirmation_bottom_sheet.dart';
+import 'package:naibrly/widgets/naibrly_now_bottom_sheet.dart';
 import 'package:naibrly/views/screen/Users/Request/review_confirm_screen.dart';
 
 class UserRequestInboxScreen extends StatefulWidget {
@@ -77,14 +76,31 @@ class _UserRequestInboxScreenState extends State<UserRequestInboxScreen> {
   }
 
   Future<void> _loadQuickMessages() async {
-    try {
-      final messages = await QuickMessageService.getQuickMessages();
-      setState(() {
-        _quickMessages = messages;
-      });
-    } catch (e) {
-      // Error loading quick messages: $e
-    }
+    final now = DateTime.now();
+    final List<String> presetQuestions = [
+      'How long does this job usually take?',
+      'Do I need to do anything to prepare before you arrive?',
+      'Do you bring your own tools and supplies, or do I need to provide anything?',
+      'Can you provide me an update when you will arrive?',
+      'Are you able to message me before you arrive?',
+      'Can you message me when the job is complete?',
+      'Is there an additional fee for same-day service?',
+      'Will there be any cleanup required after the job?',
+      'Do you offer any warranty or guarantee for the work?',
+      'What is the best contact number to reach you if needed?',
+    ];
+    setState(() {
+      _quickMessages = presetQuestions.asMap().entries.map((entry) {
+        final i = entry.key;
+        final text = entry.value;
+        return QuickMessage(
+          id: 'preset_$i',
+          message: text,
+          createdAt: now,
+          updatedAt: now,
+        );
+      }).toList();
+    });
   }
 
   void _startFeedbackTimer() {
@@ -121,38 +137,7 @@ class _UserRequestInboxScreenState extends State<UserRequestInboxScreen> {
     });
   }
 
-  void _showAddQuickMessageDialog() {
-    showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      useSafeArea: true,
-      builder: (context) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
-        ),
-        child: const AddQuickChatBottomSheet(),
-      ),
-    ).then((result) {
-      if (result == true) {
-        _loadQuickMessages();
-      }
-    });
-  }
-
-  void _navigateToQuickChatsScreen() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => const UserQuickChatsScreen(),
-      ),
-    ).then((result) {
-      _loadQuickMessages();
-      // If a message was selected to send, send it immediately
-      if (result is QuickMessage) {
-        _sendQuickMessage(result);
-      }
-    });
-  }
+  // Add/Edit quick chats disabled in preset mode
 
   @override
   void dispose() {
@@ -332,12 +317,7 @@ class _UserRequestInboxScreenState extends State<UserRequestInboxScreen> {
           ),
         ),
       ),
-      floatingActionButton: (!_isWaitingForAcceptance && !_showFeedback && !_isCancelled && widget.request.status != RequestStatus.done && !_showCompletionRequest) ? FloatingActionButton(
-        onPressed: _showAddQuickMessageDialog,
-        backgroundColor: AppColors.primary,
-        shape: const CircleBorder(),
-        child: const Icon(Icons.add, color: Colors.white),
-      ) : null,
+      floatingActionButton: null,
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
@@ -593,24 +573,10 @@ class _UserRequestInboxScreenState extends State<UserRequestInboxScreen> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: AppText(
-                      'No quick messages yet. Tap + to add some.',
+                      'No quick questions available at the moment.',
                       fontSize: 12,
                       fontWeight: FontWeight.w400,
                       color: AppColors.DarkGray,
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: _navigateToQuickChatsScreen,
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      minimumSize: Size.zero,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                    child: AppText(
-                      'See All',
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.primary,
                     ),
                   ),
                 ],
@@ -631,24 +597,10 @@ class _UserRequestInboxScreenState extends State<UserRequestInboxScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               AppText(
-                'Quick Messages',
+                'Quick Questions',
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
                 color: AppColors.DarkGray,
-              ),
-              TextButton(
-                onPressed: _navigateToQuickChatsScreen,
-                style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-                child: AppText(
-                  'See All',
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.primary,
-                ),
               ),
             ],
           ),
@@ -694,6 +646,14 @@ class _UserRequestInboxScreenState extends State<UserRequestInboxScreen> {
   void _showCancelRequestDialog() {
     showCancelRequestBottomSheet(
       context,
+      onNaibrlyNow: () {
+        // Open Naibrly Now sheet with current request info
+        showNaibrlyNowBottomSheet(
+          context,
+          serviceName: widget.request.serviceName,
+          providerName: widget.request.providerName,
+        );
+      },
       onCancelConfirmed: (reason) {
         setState(() {
           _isCancelled = true;

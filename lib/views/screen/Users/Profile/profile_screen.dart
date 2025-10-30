@@ -17,17 +17,34 @@ import 'Faq_screen/faq_screen.dart';
 import 'base/iconTextRow.dart';
 import 'base/settingItem.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   ProfileScreen({super.key});
 
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
   final TextEditingController applycupon = TextEditingController();
-  final _controller01 = ValueNotifier<bool>(false);
+  bool _notificationsExpanded = false;
+  final ValueNotifier<bool> _textMsgController = ValueNotifier<bool>(false);
+  final ValueNotifier<bool> _emailController = ValueNotifier<bool>(true);
+  final ValueNotifier<bool> _onScreenController = ValueNotifier<bool>(true);
   final List<String> settingItem = [
     "Help & Support",
     "Privacy Policy",
     "Terms & Condition",
     "Payment History",
   ];
+
+  @override
+  void dispose() {
+    applycupon.dispose();
+    _textMsgController.dispose();
+    _emailController.dispose();
+    _onScreenController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -134,16 +151,82 @@ class ProfileScreen extends StatelessWidget {
                       fontWeight: FontWeight.w600,
                       color: AppColors.Black,
                     ),
-                    AdvancedSwitch(
-                      activeColor: AppColors.primary,
-                      inactiveColor: AppColors.LightGray,
-                      width: 44,
-                      height: 22,
-                      controller: _controller01,
-                      borderRadius: BorderRadius.circular(77),
+                    IconButton(
+                      onPressed: () {
+                        setState(() {
+                          _notificationsExpanded = !_notificationsExpanded;
+                        });
+                      },
+                      icon: Icon(
+                        _notificationsExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                        color: AppColors.Black,
+                      ),
                     ),
                   ],
                 ),
+                if (_notificationsExpanded) ...[
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const AppText(
+                        'Text message',
+                        fontSize: 16,
+                        fontWeight: FontWeight.w400,
+                        color: AppColors.Black,
+                      ),
+                      AdvancedSwitch(
+                        activeColor: AppColors.primary,
+                        inactiveColor: AppColors.LightGray,
+                        width: 44,
+                        height: 22,
+                        controller: _textMsgController,
+                        borderRadius: BorderRadius.circular(77),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const AppText(
+                        'Email',
+                        fontSize: 16,
+                        fontWeight: FontWeight.w400,
+                        color: AppColors.Black,
+                      ),
+                      AdvancedSwitch(
+                        activeColor: AppColors.primary,
+                        inactiveColor: AppColors.LightGray,
+                        width: 44,
+                        height: 22,
+                        controller: _emailController,
+                        borderRadius: BorderRadius.circular(77),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const AppText(
+                        'On-screen',
+                        fontSize: 16,
+                        fontWeight: FontWeight.w400,
+                        color: AppColors.Black,
+                      ),
+                      AdvancedSwitch(
+                        activeColor: AppColors.primary,
+                        inactiveColor: AppColors.LightGray,
+                        width: 44,
+                        height: 22,
+                        controller: _onScreenController,
+                        borderRadius: BorderRadius.circular(77),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                ],
                 const Divider(color: Color(0xFFEEEEEE)),
 
                 SizedBox(height: 5),

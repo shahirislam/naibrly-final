@@ -186,7 +186,6 @@ class _DetailsScreenState extends State<DetailsScreen> {
                   children: [
            BundleCard(
              serviceTitle: bundle['title'] ?? 'Unknown Bundle',
-             bundleDescription: bundle['description'] ?? '',
              originalPrice: '\$${bundle['originalPrice']}',
              discountedPrice: '\$${bundle['discountedPrice']}',
              savings: '-\$${bundle['originalPrice'] - bundle['discountedPrice']}',

@@ -73,7 +73,8 @@ class _YourInformationScreenState extends State<YourInformationScreen> {
         ),
       ),
 
-      body: SingleChildScrollView(
+      body: SafeArea(
+        child: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -109,14 +110,26 @@ class _YourInformationScreenState extends State<YourInformationScreen> {
             // Business Name (Registered)
             const KoreTextField(
               label: "Business Name (AS REGISTERED)",
-              hint: "Jacob Meikle",
+              hint: "e.g., JM Home Services LLC",
             ),
             const SizedBox(height: 16),
 
             // Business Name (DBA)
             const KoreTextField(
               label: "Business Name (DBA)",
-              hint: "Jacob Meikle",
+              hint: "e.g., JM Home Services",
+            ),
+            const SizedBox(height: 16),
+
+            // Registrant First and Last Name
+            const KoreTextField(
+              label: "First Name",
+              hint: "Jacob",
+            ),
+            const SizedBox(height: 16),
+            const KoreTextField(
+              label: "Last Name",
+              hint: "Meikle",
             ),
             const SizedBox(height: 16),
 
@@ -413,19 +426,25 @@ class _YourInformationScreenState extends State<YourInformationScreen> {
           ],
         ),
       ),
+      ),
 
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.all(16),
-        child: KoreButton(
-          text: "Next",
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const VerifyInformationScreen(),
-              ),
-            );
-          },
+      bottomNavigationBar: SafeArea(
+        top: false,
+        left: false,
+        right: false,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: KoreButton(
+            text: "Next",
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const VerifyInformationScreen(),
+                ),
+              );
+            },
+          ),
         ),
       ),
     );
@@ -454,6 +473,7 @@ class _YourInformationScreenState extends State<YourInformationScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (context) => BusinessHoursBottomSheet(
         initialHours: businessHours,

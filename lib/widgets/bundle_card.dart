@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:naibrly/utils/app_colors.dart';
 import 'package:naibrly/views/base/AppText/appText.dart';
 import 'package:naibrly/views/base/Ios_effect/iosTapEffect.dart';
+import 'package:naibrly/views/screen/Users/Home/bundle_published_bottomsheet.dart';
 
 class BundleCard extends StatefulWidget {
   final String serviceTitle;
-  final String bundleDescription;
   final String originalPrice;
   final String discountedPrice;
   final String savings;
@@ -24,7 +24,6 @@ class BundleCard extends StatefulWidget {
   const BundleCard({
     Key? key,
     required this.serviceTitle,
-    required this.bundleDescription,
     required this.originalPrice,
     required this.discountedPrice,
     required this.savings,
@@ -51,9 +50,9 @@ class _BundleCardState extends State<BundleCard> {
     final int participants = widget.participants ?? 0;
     final int maxParticipants = widget.maxParticipants ?? 0;
     final int openSpots = (maxParticipants - participants).clamp(0, 999);
-    final String capacityText = maxParticipants > 0
+    final String? capacityText = maxParticipants > 0
         ? "$maxParticipants-Person Bundle ($participants Joined, $openSpots Spot${openSpots == 1 ? '' : 's'} Open)"
-        : widget.bundleDescription;
+        : null;
 
     final String? formattedDate = _formatDate(widget.serviceDate);
 
@@ -101,14 +100,16 @@ class _BundleCardState extends State<BundleCard> {
                       ),
                     ],
                     if (!widget.isExpanded) ...[
-                      const SizedBox(height: 6),
-                      AppText(
-                        capacityText,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w400,
-                        color: Colors.grey,
-                      ),
-                      const SizedBox(height: 6),
+                      if (capacityText != null) ...[
+                        const SizedBox(height: 6),
+                        AppText(
+                          capacityText,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w400,
+                          color: Colors.grey,
+                        ),
+                        const SizedBox(height: 6),
+                      ],
                       if (formattedDate != null)
                         AppText(
                           "Service Date: $formattedDate",
@@ -117,26 +118,30 @@ class _BundleCardState extends State<BundleCard> {
                           color: Colors.grey,
                         ),
                     ]
-                    else ...[
-                      // const SizedBox(height: 4),
-                      // AppText(
-                      //   widget.bundleDescription,
-                      //   fontSize: 12,
-                      //   fontWeight: FontWeight.w400,
-                      //   color: Colors.grey,
-                      // ),
-                    ]
                   ],
                 ),
               ),
-              // Actions: share + expand
+              // Actions: avatars (collapsed) or share (expanded) + expand/collapse icon
               Row(
                 children: [
-                  IosTapEffect(
-                    onTap: () {},
-                    child: const Icon(Icons.share_outlined, size: 20, color: Colors.black87),
-                  ),
-                  const SizedBox(width: 8),
+                  if (!widget.isExpanded) ...[
+                    _buildCollapsedAvatars(),
+                    const SizedBox(width: 8),
+                  ]
+                  else ...[
+                    IosTapEffect(
+                      onTap: () {
+                        showModalBottomSheet(
+                          context: context,
+                          useSafeArea: true,
+                          backgroundColor: Colors.transparent,
+                          builder: (context) => const BundlePublishedBottomSheet(),
+                        );
+                      },
+                      child: const Icon(Icons.share_outlined, size: 20, color: Colors.black87),
+                    ),
+                    const SizedBox(width: 8),
+                  ],
                   if (widget.isExpandable)
                     IosTapEffect(
                       onTap: widget.onToggleExpansion ?? () {},
@@ -157,12 +162,13 @@ class _BundleCardState extends State<BundleCard> {
           if (widget.isExpanded && widget.isExpandable) ...[
             const SizedBox(height: 16),
             // Capacity + Service date (expanded view)
-            AppText(
-              capacityText,
-              fontSize: 13,
-              fontWeight: FontWeight.w400,
-              color: Colors.grey,
-            ),
+            if (capacityText != null)
+              AppText(
+                capacityText,
+                fontSize: 13,
+                fontWeight: FontWeight.w400,
+                color: Colors.grey,
+              ),
             if (formattedDate != null) ...[
               const SizedBox(height: 8),
               AppText(
@@ -309,6 +315,44 @@ class _BundleCardState extends State<BundleCard> {
         color: Colors.grey.shade300,
       ),
       child: Image.asset('assets/images/jane.png'),
+    );
+  }
+
+  Widget _buildCollapsedAvatars() {
+    final List<String> avatarPaths = widget.providers
+        .map((p) => (p['avatar'] as String?) ?? 'assets/images/jane.png')
+        .toList();
+    final int count = avatarPaths.length.clamp(0, 3);
+
+    final double radius = 12;
+    final double diameter = radius * 2;
+    final double overlap = 8; // amount of horizontal overlap between avatars
+    final double width = count > 0 ? diameter + (count - 1) * (diameter - overlap) : diameter;
+
+    return SizedBox(
+      width: width,
+      height: diameter,
+      child: Stack(
+        children: [
+          for (int i = 0; i < count; i++)
+            Positioned(
+              left: i * (diameter - overlap),
+              child: Container(
+                width: diameter,
+                height: diameter,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 1.5),
+                  color: Colors.grey.shade300,
+                  image: DecorationImage(
+                    image: AssetImage(avatarPaths[i]),
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 

@@ -26,6 +26,13 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
         textTheme: GoogleFonts.interTextTheme(),
       ),
+      builder: (context, child) => SafeArea(
+        top: false,
+        left: false,
+        right: false,
+        bottom: true,
+        child: child ?? const SizedBox.shrink(),
+      ),
       home: const SplashScreen(),
     );
   }
@@ -58,6 +65,13 @@ class _NairblyAppState extends State<NairblyApp> {
         primaryColor: KoreColors.primary,
         useMaterial3: true,
         textTheme: GoogleFonts.interTextTheme(),
+      ),
+      builder: (context, child) => SafeArea(
+        top: false,
+        left: false,
+        right: false,
+        bottom: true,
+        child: child ?? const SizedBox.shrink(),
       ),
       home: Scaffold(
         body: _screens[_currentBottomNavIndex],

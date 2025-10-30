@@ -24,6 +24,18 @@ class _HomeScreenState extends State<HomeScreen> {
   bool isLoadingBundles = true;
   int? expandedIndex;
   
+  // Popular search dropdown
+  final TextEditingController _popularSearchController = TextEditingController();
+  final GlobalKey _popularSearchFieldKey = GlobalKey();
+  final LayerLink _popularSearchLink = LayerLink();
+  OverlayEntry? _popularOverlay;
+  double _popularFieldWidth = 0;
+  final List<String> _popularItems = const [
+    'Home Repairs',
+    'Cleaning & Organization',
+    'Renovations & Upgrades',
+  ];
+  
   // Service request state
   bool showServiceRequests = true;
   Map<String, dynamic>? currentServiceRequest;
@@ -60,6 +72,99 @@ class _HomeScreenState extends State<HomeScreen> {
         'problemNote': 'My refrigerator is not cooling properly. The freezer works but the main compartment is warm.',
       };
     });
+  }
+
+  void _openPopularSearches() {
+    if (_popularOverlay != null) return;
+    final overlay = Overlay.of(context);
+    if (overlay == null) return;
+    final RenderBox? box = _popularSearchFieldKey.currentContext?.findRenderObject() as RenderBox?;
+    _popularFieldWidth = box?.size.width ?? 0;
+
+    _popularOverlay = OverlayEntry(
+      builder: (ctx) => GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onTap: _closePopularSearches,
+        child: Stack(
+          children: [
+            CompositedTransformFollower(
+              link: _popularSearchLink,
+              showWhenUnlinked: false,
+              offset: const Offset(0, 48 + 4),
+              child: Material(
+                color: Colors.transparent,
+                child: Container(
+                  width: _popularFieldWidth,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.grey.shade300),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.08),
+                        blurRadius: 12,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
+                        child: Text(
+                          'Popular searches',
+                          style: TextStyle(
+                            color: Colors.grey.shade600,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      ..._popularItems.map((item) => InkWell(
+                            onTap: () {
+                              setState(() {
+                                _popularSearchController.text = item;
+                              });
+                              _closePopularSearches();
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                              child: Row(
+                                children: [
+                                  Icon(Icons.search, size: 18, color: Colors.grey.shade700),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Text(
+                                      item,
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500,
+                                        color: Colors.black,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          )),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    overlay.insert(_popularOverlay!);
+  }
+
+  void _closePopularSearches() {
+    _popularOverlay?.remove();
+    _popularOverlay = null;
   }
 
   void _handleServiceRequestCancel() {
@@ -174,13 +279,20 @@ class _HomeScreenState extends State<HomeScreen> {
                   SizedBox(width: 10,),
                   Expanded(
                     flex: 3,
-                    child: TextFormField(
-                      decoration: const InputDecoration(
-                        hintText: "Home Repairs",
-                        border: InputBorder.none,
-                        isCollapsed: true,
+                    child: CompositedTransformTarget(
+                      link: _popularSearchLink,
+                      child: TextFormField(
+                        key: _popularSearchFieldKey,
+                        controller: _popularSearchController,
+                        readOnly: true,
+                        onTap: _openPopularSearches,
+                        decoration: const InputDecoration(
+                          hintText: "Home Repairs",
+                          border: InputBorder.none,
+                          isCollapsed: true,
+                        ),
+                        style: TextStyle(color: AppColors.textcolor),
                       ),
-                      style: TextStyle(color: AppColors.textcolor),
                     ),
                   ),
                   Container(
@@ -310,12 +422,16 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     BundleCard(
                       serviceTitle: bundle['title'] ?? 'Unknown Bundle',
-                      bundleDescription: bundle['description'] ?? '',
+                      publishedText: 'Published 1hr ago',
                       originalPrice: '\$${bundle['originalPrice']}',
                       discountedPrice: '\$${bundle['discountedPrice']}',
                       savings: '-\$${bundle['originalPrice'] - bundle['discountedPrice']}',
                       providers: List<Map<String, dynamic>>.from(bundle['providers'] ?? []),
                       benefits: List<String>.from(bundle['benefits'] ?? []),
+                      participants: bundle['participants'],
+                      maxParticipants: bundle['maxParticipants'],
+                      serviceDate: bundle['expiryDate'],
+                      discountPercentage: bundle['discountPercentage'],
                       isExpanded: expandedIndex == index,
                       onToggleExpansion: () {
                         setState(() {
@@ -341,6 +457,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       onPressed: () {
                         showModalBottomSheet(
                           context: context,
+                          useSafeArea: true,
                           isScrollControlled: true,
                           backgroundColor: Colors.transparent,
                           builder: (context) => const CreateBundleBottomSheet(),

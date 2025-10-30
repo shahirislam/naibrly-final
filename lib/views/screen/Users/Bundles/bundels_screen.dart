@@ -166,7 +166,6 @@ class _BundelsScreenState extends State<BundelsScreen> {
                          children: [
                            BundleCard(
                              serviceTitle: bundle['title'] ?? 'Unknown Bundle',
-                             bundleDescription: bundle['description'] ?? '',
                              originalPrice: '\$${bundle['originalPrice']}',
                              discountedPrice: '\$${bundle['discountedPrice']}',
                              savings: '-\$${bundle['originalPrice'] - bundle['discountedPrice']}',
@@ -202,6 +201,7 @@ class _BundelsScreenState extends State<BundelsScreen> {
                       onPressed: () {
                         showModalBottomSheet(
                           context: context,
+                          useSafeArea: true,
                           isScrollControlled: true,
                           backgroundColor: Colors.transparent,
                           builder: (context) => const CreateBundleBottomSheet(),

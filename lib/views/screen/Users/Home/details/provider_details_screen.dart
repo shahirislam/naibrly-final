@@ -4,6 +4,7 @@ import 'package:naibrly/views/base/AppText/appText.dart';
 import 'package:naibrly/provider/models/client_feedback.dart';
 import 'package:naibrly/provider/widgets/home/client_feedback_section.dart';
 import 'package:naibrly/widgets/payment_confirmation_bottom_sheet.dart';
+import 'package:naibrly/widgets/naibrly_now_bottom_sheet.dart';
 
 class ProviderDetailsScreen extends StatefulWidget {
   final String providerName;
@@ -261,7 +262,7 @@ class _ProviderDetailsScreenState extends State<ProviderDetailsScreen> {
     return Center(
       child: ElevatedButton(
         onPressed: () {
-          showRequestServiceBottomSheet(
+          showNaibrlyNowBottomSheet(
             context,
             serviceName: "Appliance Repairs",
             providerName: widget.providerName,

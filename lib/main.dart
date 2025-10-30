@@ -18,6 +18,13 @@ class MyApp extends StatelessWidget {
         fontFamily: AppConstants.FONTFAMILY,
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
+      builder: (context, child) => SafeArea(
+        top: false,
+        left: false,
+        right: false,
+        bottom: true,
+        child: child ?? const SizedBox.shrink(),
+      ),
       home: WelcomeScreen(),
     );
   }

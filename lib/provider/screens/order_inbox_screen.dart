@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import '../widgets/colors.dart';
 import '../models/order.dart';
 import '../models/quick_message.dart';
-import '../services/quick_message_service.dart';
 import 'package:naibrly/widgets/payment_confirmation_bottom_sheet.dart';
-import 'quick_chats_screen.dart';
 
 class OrderInboxScreen extends StatefulWidget {
   final Order order;
@@ -64,14 +62,31 @@ class _OrderInboxScreenState extends State<OrderInboxScreen> {
   }
 
   Future<void> _loadQuickMessages() async {
-    try {
-      final messages = await QuickMessageService.getQuickMessages();
-      setState(() {
-        _quickMessages = messages;
-      });
-    } catch (e) {
-      // Error loading quick messages: $e
-    }
+    final now = DateTime.now();
+    final List<String> presetQuestions = [
+      'How long does this job usually take?',
+      'Do I need to do anything to prepare before you arrive?',
+      'Do you bring your own tools and supplies, or do I need to provide anything?',
+      'Can you provide me an update when you will arrive?',
+      'Are you able to message me before you arrive?',
+      'Can you message me when the job is complete?',
+      'Is there an additional fee for same-day service?',
+      'Will there be any cleanup required after the job?',
+      'Do you offer any warranty or guarantee for the work?',
+      'What is the best contact number to reach you if needed?',
+    ];
+    setState(() {
+      _quickMessages = presetQuestions.asMap().entries.map((entry) {
+        final i = entry.key;
+        final text = entry.value;
+        return QuickMessage(
+          id: 'preset_$i',
+          message: text,
+          createdAt: now,
+          updatedAt: now,
+        );
+      }).toList();
+    });
   }
 
   void _sendQuickMessage(QuickMessage message) {
@@ -97,33 +112,7 @@ class _OrderInboxScreenState extends State<OrderInboxScreen> {
 
   }
 
-  void _showAddQuickMessageDialog() {
-    // Navigate to quick chats screen instead of showing bottom sheet
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const QuickChatsScreen(),
-      ),
-    ).then((result) {
-      if (result == true) {
-        _loadQuickMessages();
-      }
-    });
-  }
-
-  void _navigateToQuickChatsScreen() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => const QuickChatsScreen(),
-      ),
-    ).then((result) {
-      _loadQuickMessages();
-      // If a message was selected to send, send it immediately
-      if (result is QuickMessage) {
-        _sendQuickMessage(result);
-      }
-    });
-  }
+  // Preset quick questions only; add/navigate screens disabled
 
   @override
   void dispose() {
@@ -214,12 +203,7 @@ class _OrderInboxScreenState extends State<OrderInboxScreen> {
               ],
             ),
       ),
-      floatingActionButton: (!_isWaitingForAcceptance && !_showFeedback && !_isCancelled && widget.order.status != OrderStatus.completed) ? FloatingActionButton(
-        onPressed: _showAddQuickMessageDialog,
-        backgroundColor: const Color(0xFF0E7A60),
-        shape: const CircleBorder(),
-        child: const Icon(Icons.add, color: Colors.white),
-      ) : null,
+      floatingActionButton: null,
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
@@ -487,25 +471,9 @@ class _OrderInboxScreenState extends State<OrderInboxScreen> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'No quick messages yet. Tap + to add some.',
+                      'No quick questions available at the moment.',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Colors.grey[600],
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: _navigateToQuickChatsScreen,
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      minimumSize: Size.zero,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                    child: Text(
-                      'See All',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: const Color(0xFF0E7A60),
-                        fontWeight: FontWeight.w600,
                         fontSize: 12,
                       ),
                     ),
@@ -528,27 +496,11 @@ class _OrderInboxScreenState extends State<OrderInboxScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Quick Messages',
+                'Quick Questions',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   fontWeight: FontWeight.w600,
                   color: Colors.grey[700],
                   fontSize: 12,
-                ),
-              ),
-              TextButton(
-                onPressed: _navigateToQuickChatsScreen,
-                style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-                child: Text(
-                  'See All',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: const Color(0xFF0E7A60),
-                    fontWeight: FontWeight.w600,
-                    fontSize: 12,
-                  ),
                 ),
               ),
             ],
@@ -599,6 +551,7 @@ class _OrderInboxScreenState extends State<OrderInboxScreen> {
   void _showTaskDoneBottomSheet() {
     showModalBottomSheet(
       context: context,
+      useSafeArea: true,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => TaskDoneBottomSheet(

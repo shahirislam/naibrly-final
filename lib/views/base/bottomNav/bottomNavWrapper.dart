@@ -36,11 +36,16 @@ class BottomMenuWrappers extends StatelessWidget {
         ),
       ),
       extendBody: true,
-      bottomNavigationBar: Container(
-        color: AppColors.White,
-        child: IosStyleBottomNavigations(
-          onTap: controller.selectTab,
-          currentIndex:  controller.selectedIndex.value,
+      bottomNavigationBar: SafeArea(
+        top: false,
+        left: false,
+        right: false,
+        child: Container(
+          color: AppColors.White,
+          child: IosStyleBottomNavigations(
+            onTap: controller.selectTab,
+            currentIndex:  controller.selectedIndex.value,
+          ),
         ),
       ),
     ));

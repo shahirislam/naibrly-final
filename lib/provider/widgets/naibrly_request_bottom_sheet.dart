@@ -10,6 +10,7 @@ Future<void> showNaibrlyRequestBottomSheet(
 }) async {
   await showModalBottomSheet(
     context: context,
+    useSafeArea: true,
     barrierColor: const Color(0xFF030306).withOpacity(0.90),
     backgroundColor: Colors.transparent,
     isScrollControlled: true,

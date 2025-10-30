@@ -5,6 +5,8 @@ import 'package:naibrly/views/base/AppText/appText.dart';
 import 'package:naibrly/views/base/Ios_effect/iosTapEffect.dart';
 import 'package:naibrly/views/screen/Users/Home/bundle_published_bottomsheet.dart';
 import 'package:naibrly/provider/widgets/custom_single_select_dropdown.dart';
+import 'package:naibrly/views/base/pickers/custom_date_picker.dart';
+import 'package:naibrly/views/base/pickers/custom_time_picker.dart';
 
 class CreateBundleBottomSheet extends StatefulWidget {
   const CreateBundleBottomSheet({super.key});
@@ -19,8 +21,7 @@ class _CreateBundleBottomSheetState extends State<CreateBundleBottomSheet> {
   String? selectedPrimary;
   String? selectedSecondary;
   String? selectedTertiary;
-  DateTime? fromDate;
-  DateTime? toDate;
+  DateTime? serviceDate;
   TimeOfDay? fromTime;
   TimeOfDay? toTime;
   
@@ -188,48 +189,22 @@ class _CreateBundleBottomSheetState extends State<CreateBundleBottomSheet> {
             ),
             const SizedBox(height: 24),
             
-            // Date Selection Section
-            Row(
+            // Service Date Selection
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const AppText(
-                        "From date*",
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.black,
-                      ),
-                      const SizedBox(height: 8),
-                      _buildDateField("Select date", fromDate, (date) {
-                        setState(() {
-                          fromDate = date;
-                        });
-                      }),
-                    ],
-                  ),
+                const AppText(
+                  "Service Date*",
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.black,
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const AppText(
-                        "To date*",
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.black,
-                      ),
-                      const SizedBox(height: 8),
-                      _buildDateField("Select date", toDate, (date) {
-                        setState(() {
-                          toDate = date;
-                        });
-                      }),
-                    ],
-                  ),
-                ),
+                const SizedBox(height: 8),
+                _buildDateField("Select date", serviceDate, (date) {
+                  setState(() {
+                    serviceDate = date;
+                  });
+                }),
               ],
             ),
             const SizedBox(height: 24),
@@ -292,6 +267,7 @@ class _CreateBundleBottomSheetState extends State<CreateBundleBottomSheet> {
                   // Show the success bottom sheet
                   showModalBottomSheet(
                     context: context,
+                    useSafeArea: true,
                     backgroundColor: Colors.transparent,
                     builder: (context) => const BundlePublishedBottomSheet(),
                   );
@@ -355,15 +331,15 @@ class _CreateBundleBottomSheetState extends State<CreateBundleBottomSheet> {
   Widget _buildDateField(String hint, DateTime? selectedDate, Function(DateTime?) onDateSelected) {
     return IosTapEffect(
       onTap: () async {
-        final DateTime? picked = await showDatePicker(
+        showDialog(
           context: context,
-          initialDate: selectedDate ?? DateTime.now(),
-          firstDate: DateTime.now(),
-          lastDate: DateTime.now().add(const Duration(days: 365)),
+          barrierDismissible: true,
+          builder: (_) => CustomDatePicker(
+            selectedDate: selectedDate,
+            onDateSelected: (d) => onDateSelected(d),
+            onClose: () => Navigator.of(context).pop(),
+          ),
         );
-        if (picked != null) {
-          onDateSelected(picked);
-        }
       },
       child: Container(
         height: 48,
@@ -399,13 +375,15 @@ class _CreateBundleBottomSheetState extends State<CreateBundleBottomSheet> {
   Widget _buildTimeField(String hint, TimeOfDay? selectedTime, Function(TimeOfDay?) onTimeSelected) {
     return IosTapEffect(
       onTap: () async {
-        final TimeOfDay? picked = await showTimePicker(
+        showDialog(
           context: context,
-          initialTime: selectedTime ?? TimeOfDay.now(),
+          barrierDismissible: true,
+          builder: (_) => CustomTimePicker(
+            selectedTime: selectedTime,
+            onTimeSelected: (t) => onTimeSelected(t),
+            onClose: () => Navigator.of(context).pop(),
+          ),
         );
-        if (picked != null) {
-          onTimeSelected(picked);
-        }
       },
       child: Container(
         height: 48,

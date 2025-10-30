@@ -255,6 +255,7 @@ class OrderDetailsBottomSheet extends StatelessWidget {
   void _showCancelConfirmation(BuildContext context) {
     showModalBottomSheet(
       context: context,
+      useSafeArea: true,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => CancelOrderBottomSheet(

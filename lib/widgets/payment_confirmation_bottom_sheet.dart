@@ -3,7 +3,10 @@ import 'dart:math';
 import 'package:naibrly/utils/app_colors.dart';
 import 'package:naibrly/views/base/AppText/appText.dart';
 import 'package:naibrly/provider/models/order.dart';
+import 'package:naibrly/widgets/naibrly_now_bottom_sheet.dart';
 import 'package:naibrly/provider/screens/order_inbox_screen.dart';
+import 'package:naibrly/views/base/pickers/custom_date_picker.dart';
+import 'package:naibrly/views/base/pickers/custom_time_picker.dart';
 
 class CustomBottomSheet extends StatefulWidget {
   final Widget? topIcon;
@@ -108,8 +111,12 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
             ),
             color: AppColors.White,
           ),
-          child: SingleChildScrollView(
-            child: Column(
+          child: Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom,
+            ),
+            child: SingleChildScrollView(
+              child: Column(
               children: [
               // Image
               if (widget.imagePath != null) ...[
@@ -135,26 +142,32 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
                 ),
                 const SizedBox(height: 16),
               ],
+
+              SizedBox(height: 16),
               
-              // Title
-              AppText(
-                widget.title,
-                color: AppColors.textcolor,
-                fontSize: 18,
-                textAlign: TextAlign.center,
-                fontWeight: FontWeight.bold,
-              ),
-              const SizedBox(height: 16),
+              // Title (optional)
+              if (widget.title.trim().isNotEmpty) ...[
+                AppText(
+                  widget.title,
+                  color: AppColors.textcolor,
+                  fontSize: 18,
+                  textAlign: TextAlign.center,
+                  fontWeight: FontWeight.bold,
+                ),
+                const SizedBox(height: 16),
+              ],
               
-              // Description
-              AppText(
-                widget.description,
-                color: AppColors.textcolor.withValues(alpha: 0.70),
-                fontSize: 15,
-                textAlign: TextAlign.center,
-                fontWeight: FontWeight.w300,
-              ),
-              const SizedBox(height: 16),
+              // Description (optional)
+              if (widget.description.trim().isNotEmpty) ...[
+                AppText(
+                  widget.description,
+                  color: AppColors.textcolor.withOpacity(0.70),
+                  fontSize: 15,
+                  textAlign: TextAlign.center,
+                  fontWeight: FontWeight.w300,
+                ),
+                const SizedBox(height: 16),
+              ],
               
               // Rating Section
               if (widget.showRating) ...[
@@ -247,7 +260,7 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
                       child: Container(
                         height: 40,
                         decoration: BoxDecoration(
-                          color: widget.secondaryButtonColor ?? AppColors.black.withValues(alpha: 0.10),
+                          color: widget.secondaryButtonColor ?? AppColors.black.withOpacity(0.10),
                           borderRadius: BorderRadius.circular(8),
                           border: widget.secondaryButtonBorderColor != null 
                             ? Border.all(color: widget.secondaryButtonBorderColor!, width: 0.5)
@@ -312,6 +325,7 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
             ),
           ),
         ),
+        ),
       ],
     );
   }
@@ -347,7 +361,8 @@ void showCustomBottomSheet({
 }) {
   showModalBottomSheet(
     context: context,
-    barrierColor: const Color(0xFF030306).withValues(alpha: 0.90),
+    useSafeArea: true,
+    barrierColor: const Color(0xFF030306).withOpacity(0.90),
     backgroundColor: Colors.transparent,
     isScrollControlled: true,
     isDismissible: true,
@@ -426,7 +441,7 @@ void showPaymentConfirmationBottomSheet(BuildContext context) {
 }
 
 // Cancel Request Bottom Sheet
-void showCancelRequestBottomSheet(BuildContext context, {ValueChanged<String>? onCancelConfirmed}) {
+void showCancelRequestBottomSheet(BuildContext context, {ValueChanged<String>? onCancelConfirmed, VoidCallback? onNaibrlyNow}) {
   final TextEditingController reasonController = TextEditingController();
   
   showCustomBottomSheet(
@@ -449,7 +464,10 @@ void showCancelRequestBottomSheet(BuildContext context, {ValueChanged<String>? o
     title: "Are you sure!",
     description: "you want to cancel this order?",
     primaryButtonText: "Cancelled",
-    showSecondaryButton: false,
+    showSecondaryButton: true,
+    secondaryButtonText: "Naibrly Now",
+    secondaryButtonColor: const Color(0xFF0E7A60),
+    secondaryButtonTextColor: Colors.white,
     showRating: false,
     showFeedback: false,
     primaryButtonColor: const Color(0xFFF34F4F),
@@ -502,6 +520,10 @@ void showCancelRequestBottomSheet(BuildContext context, {ValueChanged<String>? o
       
       onCancelConfirmed?.call(reasonController.text.trim());
       Navigator.of(context).pop();
+    },
+    onSecondaryButtonTap: () {
+      Navigator.of(context).pop();
+      onNaibrlyNow?.call();
     },
   );
 }
@@ -592,7 +614,9 @@ void showRequestServiceBottomSheet(BuildContext context, {required String servic
     showFeedback: false,
     primaryButtonColor: const Color(0xFF0E7A60),
     containerHeight: 600,
-    customContent: Column(
+    customContent: StatefulBuilder(
+      builder: (context, setState) {
+        return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Service Info
@@ -706,15 +730,18 @@ void showRequestServiceBottomSheet(BuildContext context, {required String servic
                   const SizedBox(height: 8),
                   GestureDetector(
                     onTap: () async {
-                      final date = await showDatePicker(
+                      showDialog(
                         context: context,
-                        initialDate: DateTime.now(),
-                        firstDate: DateTime.now(),
-                        lastDate: DateTime.now().add(const Duration(days: 30)),
+                        barrierDismissible: true,
+                        builder: (_) => CustomDatePicker(
+                          selectedDate: selectedDate,
+                          onDateSelected: (d) {
+                            selectedDate = d;
+                            setState(() {});
+                          },
+                          onClose: () => Navigator.of(context).pop(),
+                        ),
                       );
-                      if (date != null) {
-                        selectedDate = date;
-                      }
                     },
                     child: Container(
                       padding: const EdgeInsets.all(12),
@@ -729,7 +756,7 @@ void showRequestServiceBottomSheet(BuildContext context, {required String servic
                           const SizedBox(width: 8),
                           AppText(
                             selectedDate != null 
-                              ? '${selectedDate.day}/${selectedDate.month}/${selectedDate.year}'
+                              ? '${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}'
                               : 'Select Date',
                             fontSize: 14,
                             color: selectedDate != null ? AppColors.Black : Colors.grey,
@@ -755,13 +782,18 @@ void showRequestServiceBottomSheet(BuildContext context, {required String servic
                   const SizedBox(height: 8),
                   GestureDetector(
                     onTap: () async {
-                      final time = await showTimePicker(
+                      showDialog(
                         context: context,
-                        initialTime: TimeOfDay.now(),
+                        barrierDismissible: true,
+                        builder: (_) => CustomTimePicker(
+                          selectedTime: selectedTime,
+                          onTimeSelected: (t) {
+                            selectedTime = t;
+                            setState(() {});
+                          },
+                          onClose: () => Navigator.of(context).pop(),
+                        ),
                       );
-                      if (time != null) {
-                        selectedTime = time;
-                      }
                     },
                     child: Container(
                       padding: const EdgeInsets.all(12),
@@ -776,7 +808,7 @@ void showRequestServiceBottomSheet(BuildContext context, {required String servic
                           const SizedBox(width: 8),
                           AppText(
                             selectedTime != null 
-                              ? selectedTime.format(context)
+                              ? selectedTime!.format(context)
                               : 'Select Time',
                             fontSize: 14,
                             color: selectedTime != null ? AppColors.Black : Colors.grey,
@@ -791,6 +823,8 @@ void showRequestServiceBottomSheet(BuildContext context, {required String servic
           ],
         ),
       ],
+    );
+      },
     ),
     onPrimaryButtonTap: () {
       if (problemController.text.trim().isEmpty) {
@@ -889,7 +923,7 @@ void showRequestFailedBottomSheet(BuildContext context) {
         );
       },
     ),
-    imagePath: "assets/images/roundCross.png",
+    imagePath: "assets/images/cross.png",
     imageHeight: 100,
     imageWidth: 100,
     title: "Request Failed",
@@ -1353,7 +1387,10 @@ void showOrderCancellationBottomSheet(BuildContext context, {required Map<String
     title: "Are you sure!",
     description: "you want to cancel this order?",
     primaryButtonText: "Cancelled",
-    showSecondaryButton: false,
+    showSecondaryButton: true,
+    secondaryButtonText: "Naibrly Now",
+    secondaryButtonColor: const Color(0xFF0E7A60),
+    secondaryButtonTextColor: Colors.white,
     showRating: false,
     showFeedback: false,
     primaryButtonColor: const Color(0xFFFF6B6B),
@@ -1391,6 +1428,14 @@ void showOrderCancellationBottomSheet(BuildContext context, {required Map<String
       Navigator.of(context).pop();
       // TODO: Handle order cancellation logic
       print("Order cancelled: ${orderData['id']}");
+    },
+    onSecondaryButtonTap: () {
+      Navigator.of(context).pop();
+      showNaibrlyNowBottomSheet(
+        context,
+        serviceName: orderData['service']?.toString() ?? 'Service',
+        providerName: orderData['customer']?.toString() ?? 'Provider',
+      );
     },
   );
 }
