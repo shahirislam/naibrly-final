@@ -13,24 +13,7 @@ class SettingsSection extends StatelessWidget {
     return Column(
       children: [
         const Divider(color: Colors.grey),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              "Notifications",
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-                fontSize: 14,
-              ),
-            ),
-            Switch(
-              value: true,
-              onChanged: (value) {},
-              activeColor: Colors.green,
-            ),
-          ],
-        ),
-        const Divider(color: Colors.grey),
+        
         _buildSettingItem(context, "Help & Support", () {
           Navigator.push(
             context,
