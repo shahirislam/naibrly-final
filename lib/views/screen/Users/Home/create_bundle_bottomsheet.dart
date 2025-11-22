@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
+import 'package:naibrly/controller/Customer/bundlesController/createBundle.dart';
 import 'package:naibrly/utils/app_colors.dart';
 import 'package:naibrly/views/base/AppText/appText.dart';
 import 'package:naibrly/views/base/Ios_effect/iosTapEffect.dart';
@@ -7,6 +9,9 @@ import 'package:naibrly/views/screen/Users/Home/bundle_published_bottomsheet.dar
 import 'package:naibrly/provider/widgets/custom_single_select_dropdown.dart';
 import 'package:naibrly/views/base/pickers/custom_date_picker.dart';
 import 'package:naibrly/views/base/pickers/custom_time_picker.dart';
+import 'package:get/get.dart';
+import '../../../base/appTextfield/appTextfield.dart';
+import '../../../base/primaryButton/primary_button.dart';
 
 class CreateBundleBottomSheet extends StatefulWidget {
   const CreateBundleBottomSheet({super.key});
@@ -24,7 +29,11 @@ class _CreateBundleBottomSheetState extends State<CreateBundleBottomSheet> {
   DateTime? serviceDate;
   TimeOfDay? fromTime;
   TimeOfDay? toTime;
-  
+  final TextEditingController title = TextEditingController();
+  final TextEditingController discription = TextEditingController();
+
+  final CreateBundleController controller = Get.put(CreateBundleController());
+
   final List<String> categories = [
     'Interior',
     'Door & Window',
@@ -81,7 +90,7 @@ class _CreateBundleBottomSheetState extends State<CreateBundleBottomSheet> {
   Widget build(BuildContext context) {
     return Container(
       constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height * 0.8,
+        maxHeight: MediaQuery.of(context).size.height * 0.9,
       ),
       decoration: const BoxDecoration(
         color: Colors.white,
@@ -98,16 +107,16 @@ class _CreateBundleBottomSheetState extends State<CreateBundleBottomSheet> {
             mainAxisSize: MainAxisSize.min,
             children: [
             // Header
-            Center(
+            const  Center(
               child: Column(
                 children: [
-                  const AppText(
+                   AppText(
                     "Create Bundle",
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
                     color: Colors.black,
                   ),
-                  const SizedBox(height: 8),
+                   SizedBox(height: 8),
                   AppText(
                     "Bundle Target: 3 Users (within 10 miles)",
                     fontSize: 14,
@@ -118,15 +127,33 @@ class _CreateBundleBottomSheetState extends State<CreateBundleBottomSheet> {
               ),
             ),
             const SizedBox(height: 30),
-            
+
+              const AppText(
+                "Bundle title",
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: Colors.black,
+              ),
+              const SizedBox(height: 12),
+              AppTextField(controller: title, hint: "Bundle title.."),
+              const SizedBox(height: 12),
+              const AppText(
+                "Bundle description",
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: Colors.black,
+              ),
+              const SizedBox(height: 12),
+              AppTextField(controller: discription, hint: "Bundle description.."),
+              const SizedBox(height: 12),
             // Primary/Secondary/Tertiary Dropdowns
-            const AppText(
+             const AppText(
               "Select Category*",
               fontSize: 16,
               fontWeight: FontWeight.w500,
               color: Colors.black,
             ),
-            const SizedBox(height: 12),
+             const SizedBox(height: 12),
 
             // Primary + Secondary (side by side)
             Row(
@@ -254,42 +281,68 @@ class _CreateBundleBottomSheetState extends State<CreateBundleBottomSheet> {
               ],
             ),
             
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: ElevatedButton(
-                onPressed: () {
-                  // Close the create bundle bottom sheet
-                  Navigator.pop(context);
-                  
-                  // Show the success bottom sheet
-                  showModalBottomSheet(
-                    context: context,
-                    useSafeArea: true,
-                    backgroundColor: Colors.transparent,
-                    builder: (context) => const BundlePublishedBottomSheet(),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFFF7043), // Orange color
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  elevation: 0,
-                ),
-                child: const Text(
-                  "Publish",
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ),
-              SizedBox(height: 10),
+
+             Obx(() {
+                return PrimaryButton(
+                  backgroundColor: const Color(0xFFFF7043),
+                  loading: controller.isLoading.value,
+                  text: "Publish Bundle",
+                  onTap: () {
+                    final titleText = title.text.trim();
+                    final descriptionText = discription.text.trim();
+
+                    // Validate required UI fields (title & description)
+                    if (titleText.isEmpty || descriptionText.isEmpty) {
+                      showError(context, "Please fill in title and description.");
+                      return;
+                    }
+
+
+                    // For example, from dropdowns, date/time pickers, etc.
+                    final primary = selectedPrimary;         // e.g., "Interior"
+                    final secondary = selectedSecondary;     // e.g., "Home Repairs & Maintenance"
+                    final tertiary = selectedTertiary;       // e.g., "Plumbing"
+
+                    final date = serviceDate;                // DateTime?
+                    final from = fromTime;                   // TimeOfDay?
+                    final to = toTime;                       // TimeOfDay?
+
+                    // Validate category selections
+                    if (primary == null || secondary == null || tertiary == null) {
+                      showError(context, "Please select all categories.");
+                      return;
+                    }
+
+                    if (date == null || from == null || to == null) {
+                      showError(context, "Please select date and time.");
+                      return;
+                    }
+
+                    // Format date as "YYYY-MM-DD"
+                    final formattedDate = "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
+
+                    // Format time as "HH:mm"
+                    final fromTimeStr = "${from.hour.toString().padLeft(2, '0')}:${from.minute.toString().padLeft(2, '0')}";
+                    final toTimeStr = "${to.hour.toString().padLeft(2, '0')}:${to.minute.toString().padLeft(2, '0')}";
+
+                    // Call controller method with correct args
+                    controller.createBundle(
+                      context: context,
+                      primaryCategory: primary,
+                      secondaryCategory: secondary,
+                      services: [tertiary], // or allow multiple
+                      serviceDate: formattedDate,
+                      serviceTimeStart: fromTimeStr,
+                      serviceTimeEnd: toTimeStr,
+                      title: titleText,
+                      description: descriptionText,
+                    );
+                  },
+                );
+              }),
+              const SizedBox(height: 10),
           ],
         ),
       ),
@@ -297,6 +350,22 @@ class _CreateBundleBottomSheetState extends State<CreateBundleBottomSheet> {
     );
   }
 
+  void showError(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message, style: TextStyle(color: Colors.white)),
+        backgroundColor: Colors.red,
+      ),
+    );
+  }
+  void showSuccess(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message, style: TextStyle(color: Colors.white)),
+        backgroundColor: Colors.green,
+      ),
+    );
+  }
   Widget _buildCategoryChip(String text) {
     return Container(
       height: 48,

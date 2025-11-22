@@ -30,7 +30,7 @@ class SetNewPassword extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Align(
+              const  Align(
                   alignment: Alignment.topLeft,
                   child: AppText(
                     "Enter New Password",
@@ -40,7 +40,7 @@ class SetNewPassword extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 10),
-                AppText("Set Complex passwords to protect",fontSize: 14,fontWeight: FontWeight.w400,color: AppColors.secondary,),
+                const AppText("Set Complex passwords to protect",fontSize: 14,fontWeight: FontWeight.w400,color: AppColors.secondary,),
                 const SizedBox(height: 20),
                 ReusablePasswordField(
                   title: "Password",
@@ -70,19 +70,19 @@ class SetNewPassword extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    AppText("Need Help ",fontSize: 14,fontWeight: FontWeight.w500,color: AppColors.black,),
+                    const AppText("Need Help ",fontSize: 14,fontWeight: FontWeight.w500,color: AppColors.black,),
                     Container(
                       height: 20,
                       width: 2,
                       color: AppColors.black,
                     ),
-                    AppText(" FAQ ",fontSize: 14,fontWeight: FontWeight.w500,color: AppColors.black,),
+                    const AppText(" FAQ ",fontSize: 14,fontWeight: FontWeight.w500,color: AppColors.black,),
                     Container(
                       height: 20,
                       width: 2,
                       color: AppColors.black,
                     ),
-                    AppText(" Terms Of use ",fontSize: 14,fontWeight: FontWeight.w500,color: AppColors.black,),
+                    const AppText(" Terms Of use ",fontSize: 14,fontWeight: FontWeight.w500,color: AppColors.black,),
                   ],
                 ),
               ],

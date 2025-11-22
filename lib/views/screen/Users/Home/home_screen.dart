@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
 import 'package:naibrly/utils/app_colors.dart';
 import 'package:naibrly/views/base/AppText/appText.dart';
 import 'package:naibrly/views/screen/Users/Home/create_bundle_bottomsheet.dart';
 import 'package:naibrly/widgets/bundle_card.dart';
 import 'package:naibrly/widgets/service_request_card.dart';
 import 'package:naibrly/services/mock_data_service.dart';
+import '../../../../controller/Customer/bundlesController/createBundle.dart';
+import '../../../../controller/Customer/profileController/profileController.dart';
 import '../Bundles/bundels_screen.dart';
 import 'base/popularService.dart';
 
@@ -39,12 +43,15 @@ class _HomeScreenState extends State<HomeScreen> {
   // Service request state
   bool showServiceRequests = true;
   Map<String, dynamic>? currentServiceRequest;
-
+  final ProfileController controller = Get.put(ProfileController());
+  final CreateBundleController controller1 = Get.put(CreateBundleController());
   @override
   void initState() {
     super.initState();
     _loadBundles();
     _loadServiceRequest();
+    controller.fetchUserData();
+    controller1.getNaibrlyBundle(context);
   }
 
   Future<void> _loadBundles() async {
@@ -421,6 +428,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 return Column(
                   children: [
                     BundleCard(
+                      bundleId: "5645",
                       serviceTitle: bundle['title'] ?? 'Unknown Bundle',
                       publishedText: 'Published 1hr ago',
                       originalPrice: '\$${bundle['originalPrice']}',

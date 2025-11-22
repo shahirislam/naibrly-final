@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:get/get_rx/src/rx_types/rx_types.dart';
+import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
 import 'package:naibrly/utils/app_colors.dart';
 import 'package:naibrly/views/base/AppText/appText.dart';
 import 'package:naibrly/views/base/Ios_effect/iosTapEffect.dart';
@@ -6,6 +9,9 @@ import 'package:naibrly/views/screen/Users/Home/bundle_published_bottomsheet.dar
 
 class BundleCard extends StatefulWidget {
   final String serviceTitle;
+
+  final String? bundleId;
+  final RxString? loadingBundleId;
   final String originalPrice;
   final String discountedPrice;
   final String savings;
@@ -17,7 +23,7 @@ class BundleCard extends StatefulWidget {
   final VoidCallback? onToggleExpansion;
   final int? participants;
   final int? maxParticipants;
-  final String? serviceDate; // ISO string like 2025-06-10
+  final String? serviceDate;
   final int? discountPercentage;
   final String? publishedText;
 
@@ -38,6 +44,8 @@ class BundleCard extends StatefulWidget {
     this.serviceDate,
     this.discountPercentage,
     this.publishedText,
+    this.bundleId,
+    this.loadingBundleId,
   }) : super(key: key);
 
   @override
@@ -86,7 +94,7 @@ class _BundleCardState extends State<BundleCard> {
                   children: [
                     AppText(
                       widget.serviceTitle,
-                      fontSize: 16,
+                      fontSize: 17,
                       fontWeight: FontWeight.bold,
                       color: Colors.black,
                     ),
@@ -155,9 +163,9 @@ class _BundleCardState extends State<BundleCard> {
               ),
             ],
           ),
-          
+
           const SizedBox(height: 12),
-          
+
           // Expanded Content
           if (widget.isExpanded && widget.isExpandable) ...[
             const SizedBox(height: 16),
@@ -201,7 +209,7 @@ class _BundleCardState extends State<BundleCard> {
                       ),
                       const SizedBox(height: 4),
                       AppText(
-                        "${widget.discountedPrice}/hr",
+                        "${widget.originalPrice} - ${widget.discountedPrice.toString()}/hr",
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
                         color: Colors.grey,
@@ -234,25 +242,39 @@ class _BundleCardState extends State<BundleCard> {
               ],
             ),
             const SizedBox(height: 16),
+            // Join Bundle Button with Loading (Expanded View)
             SizedBox(
               width: double.infinity,
               height: 52,
-              child: ElevatedButton(
-                onPressed: widget.onJoinBundle ?? () {},
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                  elevation: 0,
-                ),
-                child: const Text(
-                  "Join Bundle",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
+              child: Obx(() {
+                final isLoading = widget.loadingBundleId?.value == widget.bundleId;
+
+                return ElevatedButton(
+                  onPressed: isLoading ? null : widget.onJoinBundle,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                    elevation: 0,
                   ),
-                ),
-              ),
+                  child: isLoading
+                      ? const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation(Colors.white),
+                    ),
+                  )
+                      : const Text(
+                    "Join Bundle",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                );
+              }),
             ),
           ],
 
@@ -269,7 +291,7 @@ class _BundleCardState extends State<BundleCard> {
                       padding: const EdgeInsets.symmetric(vertical: 10),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
-                    child: AppText(
+                    child: const AppText(
                       "More Info",
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -279,23 +301,36 @@ class _BundleCardState extends State<BundleCard> {
                 ),
                 const SizedBox(width: 16),
                 Expanded(
-                  child: ElevatedButton(
-                    onPressed: widget.onJoinBundle ?? () {},
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      elevation: 0,
-                    ),
-                    child: const Text(
-                      "Join Bundle",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
+                  child: Obx(() {
+                    final isLoading = widget.loadingBundleId?.value == widget.bundleId;
+
+                    return ElevatedButton(
+                      onPressed: isLoading ? null : widget.onJoinBundle,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        elevation: 0,
                       ),
-                    ),
-                  ),
+                      child: isLoading
+                          ? const SizedBox(
+                        height: 16,
+                        width: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation(Colors.white),
+                        ),
+                      )
+                          : const Text(
+                        "Join Bundle",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    );
+                  }),
                 ),
               ],
             ),
@@ -305,28 +340,15 @@ class _BundleCardState extends State<BundleCard> {
     );
   }
 
-  Widget _buildUserAvatar() {
-    return Container(
-      width: 32,
-      height: 32,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(color: Colors.white, width: 2),
-        color: Colors.grey.shade300,
-      ),
-      child: Image.asset('assets/images/jane.png'),
-    );
-  }
-
   Widget _buildCollapsedAvatars() {
-    final List<String> avatarPaths = widget.providers
-        .map((p) => (p['avatar'] as String?) ?? 'assets/images/jane.png')
+    final List<String> avatarUrls = widget.providers
+        .map((p) => p['avatar'] as String)
         .toList();
-    final int count = avatarPaths.length.clamp(0, 3);
+    final int count = avatarUrls.length.clamp(0, 3);
 
     final double radius = 12;
     final double diameter = radius * 2;
-    final double overlap = 8; // amount of horizontal overlap between avatars
+    final double overlap = 8;
     final double width = count > 0 ? diameter + (count - 1) * (diameter - overlap) : diameter;
 
     return SizedBox(
@@ -337,16 +359,20 @@ class _BundleCardState extends State<BundleCard> {
           for (int i = 0; i < count; i++)
             Positioned(
               left: i * (diameter - overlap),
-              child: Container(
-                width: diameter,
-                height: diameter,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 1.5),
-                  color: Colors.grey.shade300,
-                  image: DecorationImage(
-                    image: AssetImage(avatarPaths[i]),
-                    fit: BoxFit.cover,
+              child: ClipOval(
+                child: Container(
+                  width: diameter,
+                  height: diameter,
+                  color: Colors.white,
+                  child: ClipOval(
+                    child: FadeInImage.assetNetwork(
+                      placeholder: 'assets/images/placeholder_avatar.png',
+                      image: avatarUrls[i],
+                      fit: BoxFit.cover,
+                      imageErrorBuilder: (context, error, stackTrace) => Container(
+                        color: Colors.grey.shade300,
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -366,7 +392,15 @@ class _BundleCardState extends State<BundleCard> {
             shape: BoxShape.circle,
             color: Colors.grey.shade300,
           ),
-          child: Image.asset(provider['avatar'] ?? 'assets/images/jane.png'),
+          child: ClipOval(
+            child: Image.network(
+              provider['avatar'] as String,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => Container(
+                color: Colors.grey.shade300,
+              ),
+            ),
+          ),
         ),
         const SizedBox(width: 8),
         Expanded(
@@ -374,7 +408,7 @@ class _BundleCardState extends State<BundleCard> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               AppText(
-                provider['name'] ?? 'Unknown Provider',
+                provider['name'] ?? 'Unknown',
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
                 color: Colors.black,
@@ -382,7 +416,11 @@ class _BundleCardState extends State<BundleCard> {
               const SizedBox(height: 2),
               Row(
                 children: [
-                  Image.asset('assets/images/location.png'),
+                  SvgPicture.asset(
+                    'assets/icons/location.svg',
+                    width: 12,
+                    height: 12,
+                  ),
                   const SizedBox(width: 4),
                   Expanded(
                     child: AppText(
@@ -394,7 +432,6 @@ class _BundleCardState extends State<BundleCard> {
                   ),
                 ],
               ),
-              const SizedBox(height: 5),
             ],
           ),
         ),
@@ -434,7 +471,7 @@ String? _formatDate(String? iso) {
   try {
     final dt = DateTime.tryParse(iso);
     if (dt == null) return null;
-    const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     final m = months[dt.month - 1];
     return "$m ${dt.day}, ${dt.year}";
   } catch (_) {

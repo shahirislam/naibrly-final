@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_advanced_switch/flutter_advanced_switch.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:intl/intl.dart';
+import 'package:naibrly/controller/Customer/profileController/profileController.dart';
+import 'package:naibrly/utils/app_contants.dart';
 import 'package:naibrly/views/screen/Users/Profile/ProfileEdit/edit_profile.dart';
 import 'package:naibrly/views/screen/Users/Profile/PrivacyPolicy/privacy_policy_screen.dart';
 import 'package:naibrly/views/screen/Users/Profile/TermsCondition/terms_condition_screen.dart';
@@ -26,25 +29,15 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   final TextEditingController applycupon = TextEditingController();
-  bool _notificationsExpanded = false;
-  final ValueNotifier<bool> _textMsgController = ValueNotifier<bool>(false);
-  final ValueNotifier<bool> _emailController = ValueNotifier<bool>(true);
-  final ValueNotifier<bool> _onScreenController = ValueNotifier<bool>(true);
+  final ProfileController controller = Get.put(ProfileController());
+  final _controller01 = ValueNotifier<bool>(false);
+
   final List<String> settingItem = [
     "Help & Support",
     "Privacy Policy",
     "Terms & Condition",
     "Payment History",
   ];
-
-  @override
-  void dispose() {
-    applycupon.dispose();
-    _textMsgController.dispose();
-    _emailController.dispose();
-    _onScreenController.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -82,7 +75,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     height: 24,
                   ),
                   onPressed: () {
-                   Navigator.push(context, MaterialPageRoute(builder: (builder)=>EditProfileScreen()));
+                    Navigator.push(context, MaterialPageRoute(builder: (builder)=>EditProfileScreen()));
 
                   },
                 ),
@@ -101,10 +94,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 SizedBox(height: MediaQuery.of(context).size.height *0.01),
-                Align(
+                Obx(()=>Align(
                   alignment: Alignment.center,
                   child: CustomNetworkImage(
-                    imageUrl:'https://4kwallpapers.com/images/wallpapers/nissan-z-gt4-sema-race-cars-2023-5k-3840x2160-9042.jpeg',
+                    imageUrl:"${controller.profileInfo.value!.profileImage.url}",
                     height: 130,
                     width: 130,
                     boxShape: BoxShape.circle,
@@ -113,14 +106,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       color: AppColors.LightGray,
                     ),
                   ),
-                ),
+                ),),
+
                 SizedBox(height: MediaQuery.of(context).size.height *0.01),
-                AppText(
-                    "Jon Deo",
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.Black
-                ),
+                Obx(() => AppText(
+                  '${controller.profileInfo.value!.firstName} ${controller.profileInfo.value!.lastName}',
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.Black,
+                )),
+
                 SizedBox(height: 4),
 
                 AppText(
@@ -151,82 +146,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       fontWeight: FontWeight.w600,
                       color: AppColors.Black,
                     ),
-                    IconButton(
-                      onPressed: () {
-                        setState(() {
-                          _notificationsExpanded = !_notificationsExpanded;
-                        });
-                      },
-                      icon: Icon(
-                        _notificationsExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-                        color: AppColors.Black,
-                      ),
+                    AdvancedSwitch(
+                      activeColor: AppColors.primary,
+                      inactiveColor: AppColors.LightGray,
+                      width: 44,
+                      height: 22,
+                      controller: _controller01,
+                      borderRadius: BorderRadius.circular(77),
                     ),
                   ],
                 ),
-                if (_notificationsExpanded) ...[
-                  const SizedBox(height: 12),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const AppText(
-                        'Text message',
-                        fontSize: 16,
-                        fontWeight: FontWeight.w400,
-                        color: AppColors.Black,
-                      ),
-                      AdvancedSwitch(
-                        activeColor: AppColors.primary,
-                        inactiveColor: AppColors.LightGray,
-                        width: 44,
-                        height: 22,
-                        controller: _textMsgController,
-                        borderRadius: BorderRadius.circular(77),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const AppText(
-                        'Email',
-                        fontSize: 16,
-                        fontWeight: FontWeight.w400,
-                        color: AppColors.Black,
-                      ),
-                      AdvancedSwitch(
-                        activeColor: AppColors.primary,
-                        inactiveColor: AppColors.LightGray,
-                        width: 44,
-                        height: 22,
-                        controller: _emailController,
-                        borderRadius: BorderRadius.circular(77),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const AppText(
-                        'On-screen',
-                        fontSize: 16,
-                        fontWeight: FontWeight.w400,
-                        color: AppColors.Black,
-                      ),
-                      AdvancedSwitch(
-                        activeColor: AppColors.primary,
-                        inactiveColor: AppColors.LightGray,
-                        width: 44,
-                        height: 22,
-                        controller: _onScreenController,
-                        borderRadius: BorderRadius.circular(77),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                ],
                 const Divider(color: Color(0xFFEEEEEE)),
 
                 SizedBox(height: 5),
@@ -289,10 +218,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(height: 20),
-          IconTextRow(
+
+          Obx(()=>  IconTextRow(
             iconPath: AppIcons.men,
-            text: 'Jacob Meikle',
-          ),
+            text: "${controller.profileInfo.value!.firstName} ${controller.profileInfo.value!.lastName}",
+          ),),
+
 
           SizedBox(height: 10),
 
@@ -302,22 +233,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
 
           SizedBox(height: 10),
-          IconTextRow(
-            iconPath: "assets/icons/locations.svg",
-            text: '123 Oak Street Springfield, IL 62704',
-          ),
+          Obx(() {
+            final address = controller.profileInfo.value?.address;
+            final addressText = address != null
+                ? '${address.street}, ${address.city}, ${address.state} ${address.zipCode}'
+                : 'No address available';
+
+            return IconTextRow(
+              iconPath: "assets/icons/locations.svg",
+              text: addressText,
+            );
+          }),
 
           SizedBox(height: 10),
-          IconTextRow(
+          Obx(()=>IconTextRow(
             iconPath: AppIcons.call,
-            text: '+1 012 345 6987',
-          ),
+            text: controller.profileInfo.value!.phone,
+          ),),
+
 
           SizedBox(height: 10),
-          IconTextRow(
+          Obx(()=> IconTextRow(
             iconPath: AppIcons.mail,
-            text: 'email@outlook.com',
-          ),
+            text: controller.profileInfo.value!.email,
+          )),
 
           SizedBox(height: 10),
           IconTextRow(
@@ -326,14 +265,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
 
           SizedBox(height: 10),
-          IconTextRow(
-            iconPath: AppIcons.calender,
-            text: 'Joined: Aug 5, 2023 ',
-          ),
+          Obx(() {
+            final createdAt = controller.profileInfo.value?.createdAt;
+            String dateText = createdAt != null
+                ? DateFormat('yyyy MMMM dd').format(DateTime.parse(createdAt).toLocal())
+                : 'No date available';
+
+            return IconTextRow(
+              iconPath: AppIcons.calender,
+              text: "Joined: $dateText",
+            );
+          }),
+
         ],
       ),
     );
   }
+
   void showCustomDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -416,8 +364,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         child: Container(
                           height: 44,
                           decoration: BoxDecoration(
-                              color: AppColors.primary,
-                              borderRadius: BorderRadius.circular(12),
+                            color: AppColors.primary,
+                            borderRadius: BorderRadius.circular(12),
                           ),
                           alignment: Alignment.center,
                           child: Row(
@@ -451,5 +399,4 @@ class _ProfileScreenState extends State<ProfileScreen> {
       },
     );
   }
-
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../utils/app_colors.dart';
 import '../AppText/appText.dart';
 import '../Ios_effect/iosTapEffect.dart';
+import 'package:flutter/cupertino.dart';
 
 class PrimaryButton extends StatelessWidget {
   final String text;
@@ -12,6 +13,7 @@ class PrimaryButton extends StatelessWidget {
   final double borderRadius;
   final FontWeight fontWeight;
   final double fontSize;
+  final bool loading; // ✅ add loading
 
   const PrimaryButton({
     Key? key,
@@ -23,12 +25,13 @@ class PrimaryButton extends StatelessWidget {
     this.borderRadius = 10,
     this.fontWeight = FontWeight.w500,
     this.fontSize = 16,
+    this.loading = false, // default false
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return IosTapEffect(
-      onTap: onTap,
+      onTap: loading ? () {} : onTap, // disable tap when loading
       child: Container(
         height: height,
         decoration: BoxDecoration(
@@ -36,7 +39,13 @@ class PrimaryButton extends StatelessWidget {
           color: backgroundColor ?? AppColors.primary,
         ),
         child: Center(
-          child: AppText(
+          child: loading
+              ? SizedBox(
+            width: 20,
+            height: 20,
+            child: CupertinoActivityIndicator(),
+          )
+              : AppText(
             text,
             fontSize: fontSize,
             fontWeight: fontWeight,

@@ -1,17 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:naibrly/utils/app_contants.dart';
+import 'package:naibrly/utils/tokenService.dart';
+import 'package:naibrly/views/base/bottomNav/bottomNavWrapper.dart';
 import 'package:naibrly/views/screen/welcome/welcome_screen.dart';
 
-void main() {
-  runApp(const MyApp());
+import 'controller/networkService/networkService.dart';
+
+void main()async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await TokenService().init();
+  Get.put(NetworkController());
+  final token = TokenService().getToken();
+  final bool hasToken = token != null && token.isNotEmpty;
+  runApp(MyApp(
+    firstScreen: hasToken ? BottomMenuWrappers() : const WelcomeScreen(),));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final Widget firstScreen;
+  const MyApp({super.key, required this.firstScreen});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return GetMaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
       theme: ThemeData(
@@ -25,7 +37,7 @@ class MyApp extends StatelessWidget {
         bottom: true,
         child: child ?? const SizedBox.shrink(),
       ),
-      home: WelcomeScreen(),
+      home: firstScreen,
     );
   }
 }

@@ -2,12 +2,10 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
-import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
-import 'package:naibrly/controller/LoginController/loginController.dart';
 import 'package:naibrly/utils/app_colors.dart';
 import 'package:naibrly/views/base/appTextfield/appTextfield.dart';
 import 'package:naibrly/views/screen/Users/auth/sign_up.dart';
+import '../../../controller/Customer/authCustomer/signInController.dart';
 import '../../base/AppText/appText.dart';
 import '../../base/Ios_effect/iosTapEffect.dart';
 import '../../base/primaryButton/primary_button.dart';
@@ -16,9 +14,8 @@ import 'base/or/orLogin.dart';
 class LoginScreen extends StatelessWidget {
   LoginScreen({super.key});
 
-  final TextEditingController email = TextEditingController();
-  final LoginController controller = Get.put(LoginController());
-  final TextEditingController password = TextEditingController();
+  final SignInController controller = Get.put(SignInController());
+
 
   @override
   Widget build(BuildContext context) {
@@ -53,14 +50,14 @@ class LoginScreen extends StatelessWidget {
               color: AppColors.textcolor,
             ),
             SizedBox(height: size.height * 0.03),
-            AppTextField(controller: email, hint: "Email Address"),
+            AppTextField(controller: controller.emailcontroller, hint: "Email Address"),
             SizedBox(height: 15),
             Obx(
-              () => AppTextField(
+                  () => AppTextField(
                 obscure: controller.passShowHide.value,
                 // ✅ dynamic obscure
                 keyboardType: TextInputType.twitter,
-                controller: password,
+                controller: controller.passwordcontroller,
                 // ✅ use passwordController here
                 hint: "Password",
                 suffix: IconButton(
@@ -87,12 +84,21 @@ class LoginScreen extends StatelessWidget {
               ),
             ),
             SizedBox(height: size.height * 0.04),
-            PrimaryButton(
-              text: "Login",
-              onTap: () {
-                print("Account creation tapped!");
-              },
-            ),
+            Obx((){
+              return PrimaryButton(
+                loading: controller.isLoading.value,
+                text: "Login",
+                onTap: () {
+                  final email = controller.emailcontroller.text;
+                  final password = controller.passwordcontroller.text;
+                  if(email.isEmpty || password.isEmpty){
+                    showError(context,"Please fill the field");
+                  }else{
+                    controller.loginUser(context, email, password);
+                  }
+                },
+              );
+            }),
             SizedBox(height: size.height * 0.04),
             const OrDivider(),
             SizedBox(height: size.height * 0.03),
@@ -129,6 +135,23 @@ class LoginScreen extends StatelessWidget {
     );
   }
 
+  void showError(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message, style: const TextStyle(color: Colors.white)),
+        backgroundColor: Colors.red,
+      ),
+    );
+  }
+
+  void showSuccess(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message, style: const TextStyle(color: Colors.white)),
+        backgroundColor: Colors.green,
+      ),
+    );
+  }
 }
 
 class GoogleOrAppcle extends StatelessWidget {
