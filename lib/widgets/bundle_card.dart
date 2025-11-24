@@ -9,7 +9,6 @@ import 'package:naibrly/views/screen/Users/Home/bundle_published_bottomsheet.dar
 
 class BundleCard extends StatefulWidget {
   final String serviceTitle;
-
   final String? bundleId;
   final RxString? loadingBundleId;
   final String originalPrice;
@@ -246,35 +245,7 @@ class _BundleCardState extends State<BundleCard> {
             SizedBox(
               width: double.infinity,
               height: 52,
-              child: Obx(() {
-                final isLoading = widget.loadingBundleId?.value == widget.bundleId;
-
-                return ElevatedButton(
-                  onPressed: isLoading ? null : widget.onJoinBundle,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                    elevation: 0,
-                  ),
-                  child: isLoading
-                      ? const SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation(Colors.white),
-                    ),
-                  )
-                      : const Text(
-                    "Join Bundle",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                );
-              }),
+              child: _buildJoinButton(isExpanded: true),
             ),
           ],
 
@@ -301,36 +272,7 @@ class _BundleCardState extends State<BundleCard> {
                 ),
                 const SizedBox(width: 16),
                 Expanded(
-                  child: Obx(() {
-                    final isLoading = widget.loadingBundleId?.value == widget.bundleId;
-
-                    return ElevatedButton(
-                      onPressed: isLoading ? null : widget.onJoinBundle,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        elevation: 0,
-                      ),
-                      child: isLoading
-                          ? const SizedBox(
-                        height: 16,
-                        width: 16,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation(Colors.white),
-                        ),
-                      )
-                          : const Text(
-                        "Join Bundle",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    );
-                  }),
+                  child: _buildJoinButton(isExpanded: false),
                 ),
               ],
             ),
@@ -338,6 +280,65 @@ class _BundleCardState extends State<BundleCard> {
         ],
       ),
     );
+  }
+
+  Widget _buildJoinButton({required bool isExpanded}) {
+    // If no loadingBundleId is provided, use regular button without Obx
+    if (widget.loadingBundleId == null) {
+      return ElevatedButton(
+        onPressed: widget.onJoinBundle,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.primary,
+          padding: EdgeInsets.symmetric(vertical: isExpanded ? 16 : 10),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(isExpanded ? 24 : 12),
+          ),
+          elevation: 0,
+        ),
+        child: Text(
+          "Join Bundle",
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: isExpanded ? 16 : 14,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      );
+    }
+
+    // Use Obx only when we have observable variables to watch
+    return Obx(() {
+      final isLoading = widget.loadingBundleId?.value == widget.bundleId;
+
+      return ElevatedButton(
+        onPressed: isLoading ? null : widget.onJoinBundle,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.primary,
+          padding: EdgeInsets.symmetric(vertical: isExpanded ? 16 : 10),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(isExpanded ? 24 : 12),
+          ),
+          elevation: 0,
+        ),
+        child: isLoading
+            ? SizedBox(
+          height: isExpanded ? 20 : 16,
+          width: isExpanded ? 20 : 16,
+          child: const CircularProgressIndicator(
+            strokeWidth: 2,
+            valueColor: AlwaysStoppedAnimation(Colors.white),
+          ),
+        )
+            : Text(
+          "Join Bundle",
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: isExpanded ? 16 : 14,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      );
+    });
   }
 
   Widget _buildCollapsedAvatars() {
