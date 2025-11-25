@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'colors.dart';
 
-
 class KoreButton extends StatelessWidget {
   final String text;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed; // Change to nullable
   final bool isPrimary;
   final bool isCancel;
+
   const KoreButton({
     required this.text,
-    required this.onPressed,
+    required this.onPressed, // Still required but now nullable
     this.isPrimary = true,
     this.isCancel = false,
     super.key,
@@ -28,7 +28,9 @@ class KoreButton extends StatelessWidget {
       borderColor = const Color(0xFFFCCBCB);
       borderWidth = 0.5;
     } else if (isPrimary) {
-      backgroundColor = const Color(0xFF0E7A60);
+      backgroundColor = onPressed == null
+          ? const Color(0xFF0E7A60).withOpacity(0.6)
+          : const Color(0xFF0E7A60);
       foregroundColor = Colors.white;
       borderColor = const Color(0xFF0E7A60);
       borderWidth = 0;
@@ -48,13 +50,19 @@ class KoreButton extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 8),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
-            side: borderWidth > 0 
+            side: borderWidth > 0
                 ? BorderSide(color: borderColor, width: borderWidth)
                 : BorderSide.none,
           ),
         ),
         onPressed: onPressed,
-        child: Text(text, style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600, color: foregroundColor)),
+        child: Text(
+          text,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: foregroundColor
+          ),
+        ),
       ),
     );
   }

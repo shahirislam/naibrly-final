@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:naibrly/provider/controllers/verify_information_controller.dart';
+import 'package:naibrly/provider/services/api_service.dart';
 import 'package:naibrly/utils/app_contants.dart';
 import 'package:naibrly/utils/tokenService.dart';
 import 'package:naibrly/views/base/bottomNav/bottomNavWrapper.dart';
@@ -7,14 +9,26 @@ import 'package:naibrly/views/screen/welcome/welcome_screen.dart';
 
 import 'controller/networkService/networkService.dart';
 
-void main()async {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await TokenService().init();
+
+  // Initialize and put TokenService in GetX DI
+  await Get.putAsync<TokenService>(() async {
+    final service = TokenService();
+    await service.init();
+    return service;
+  }, permanent: true);
+
   Get.put(NetworkController());
-  final token = TokenService().getToken();
+  Get.put(ApiService());
+  Get.put(VerifyInformationController());
+  final tokenService = Get.find<TokenService>();
+  final token = tokenService.getToken();
   final bool hasToken = token != null && token.isNotEmpty;
+
   runApp(MyApp(
-    firstScreen: hasToken ? BottomMenuWrappers() : const WelcomeScreen(),));
+    firstScreen: hasToken ? BottomMenuWrappers() : const WelcomeScreen(),
+  ));
 }
 
 class MyApp extends StatelessWidget {
@@ -41,5 +55,3 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
-

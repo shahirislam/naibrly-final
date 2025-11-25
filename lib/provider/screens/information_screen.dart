@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:naibrly/provider/screens/verify_information_screen.dart';
+import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
+
+import '../controllers/provider_controller.dart';
+import '../screens/verify_information_screen.dart';
 import '../widgets/button.dart';
 import '../widgets/colors.dart';
 import '../widgets/textfield.dart';
@@ -16,13 +20,16 @@ class YourInformationScreen extends StatefulWidget {
 }
 
 class _YourInformationScreenState extends State<YourInformationScreen> {
+  final ProviderController providerController = Get.put(ProviderController());
+  final ImagePicker _imagePicker = ImagePicker();
+
   String selectedCountryCode = "+1";
   String selectedStartDay = "Mon";
   String selectedEndDay = "Fri";
   String selectedStartTime = "9:00 am";
   String selectedEndTime = "5:00 pm";
-  String? selectedRole;
-  final List<String> roleOptions = ["Owner", "Manager", "Operator"];
+
+  final List<String> roleOptions = ["owner", "manager", "operator"];
   List<String> selectedServices = [];
   final List<String> availableServices = [
     "Home Repairs & Maintenance",
@@ -32,10 +39,26 @@ class _YourInformationScreenState extends State<YourInformationScreen> {
     "Plumbing Services",
     "HVAC Services",
   ];
-  
-  final TextEditingController hourlyRateController = TextEditingController(text: "10");
-  
-  // Business hours state - all days closed by default
+
+  // Text Editing Controllers
+  final TextEditingController firstNameController = TextEditingController();
+  final TextEditingController lastNameController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController confirmPasswordController = TextEditingController();
+  final TextEditingController phoneController = TextEditingController();
+  final TextEditingController businessNameRegisteredController = TextEditingController();
+  final TextEditingController businessNameDBAController = TextEditingController();
+  final TextEditingController businessPhoneController = TextEditingController();
+  final TextEditingController websiteController = TextEditingController();
+  final TextEditingController hourlyRateController = TextEditingController(text: "30");
+  final TextEditingController businessAddressStreetController = TextEditingController();
+  final TextEditingController businessAddressCityController = TextEditingController();
+  final TextEditingController businessAddressStateController = TextEditingController();
+  final TextEditingController businessAddressZipCodeController = TextEditingController();
+  final TextEditingController experienceController = TextEditingController(text: "5");
+
+  // Business hours state
   List<DayHours> businessHours = [
     DayHours(dayName: "Sunday", isOpen: false),
     DayHours(dayName: "Monday", isOpen: false),
@@ -47,9 +70,99 @@ class _YourInformationScreenState extends State<YourInformationScreen> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _setupControllerListeners();
+  }
+
+  void _setupControllerListeners() {
+    // Listen for registration success
+    ever(providerController.registrationSuccess, (success) {
+      if (success) {
+        Get.to(() => const VerifyInformationScreen());
+      }
+    });
+  }
+
+  @override
   void dispose() {
+    firstNameController.dispose();
+    lastNameController.dispose();
+    emailController.dispose();
+    passwordController.dispose();
+    confirmPasswordController.dispose();
+    phoneController.dispose();
+    businessNameRegisteredController.dispose();
+    businessNameDBAController.dispose();
+    businessPhoneController.dispose();
+    websiteController.dispose();
     hourlyRateController.dispose();
+    businessAddressStreetController.dispose();
+    businessAddressCityController.dispose();
+    businessAddressStateController.dispose();
+    businessAddressZipCodeController.dispose();
+    experienceController.dispose();
     super.dispose();
+  }
+
+  // Pick image from gallery - only for business logo
+  Future<void> _pickImage() async {
+    try {
+      final XFile? image = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 800,
+        maxHeight: 800,
+        imageQuality: 80,
+      );
+
+      if (image != null) {
+        providerController.setBusinessLogo(image.path);
+        Get.snackbar(
+          'Success',
+          'Business logo selected successfully',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+        );
+      }
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Failed to pick image: $e',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
+  }
+
+  // Prepare and submit form data
+  void _submitForm() {
+    // Update controller values from text fields
+    providerController.firstName(firstNameController.text.trim());
+    providerController.lastName(lastNameController.text.trim());
+    providerController.email(emailController.text.trim());
+    providerController.password(passwordController.text);
+    providerController.confirmPassword(confirmPasswordController.text);
+    providerController.phone('$selectedCountryCode${phoneController.text.trim()}');
+    providerController.businessNameRegistered(businessNameRegisteredController.text.trim());
+    providerController.businessNameDBA(businessNameDBAController.text.trim());
+    providerController.businessPhone(businessPhoneController.text.trim());
+    providerController.website(websiteController.text.trim());
+    providerController.servicesProvided(selectedServices.join(','));
+    providerController.businessServiceStart(selectedStartDay.toLowerCase());
+    providerController.businessServiceEnd(selectedEndDay.toLowerCase());
+    providerController.businessHoursStart(selectedStartTime);
+    providerController.businessHoursEnd(selectedEndTime);
+    providerController.hourlyRate(hourlyRateController.text.trim());
+    providerController.businessAddressStreet(businessAddressStreetController.text.trim());
+    providerController.businessAddressCity(businessAddressCityController.text.trim());
+    providerController.businessAddressState(businessAddressStateController.text.trim());
+    providerController.businessAddressZipCode(businessAddressZipCodeController.text.trim());
+    providerController.experience(experienceController.text.trim());
+
+    // Call registration
+    providerController.registerProvider();
   }
 
   @override
@@ -75,357 +188,417 @@ class _YourInformationScreenState extends State<YourInformationScreen> {
 
       body: SafeArea(
         child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Subtext
-            const Text(
-              "We need to collect your personal business information.",
-              style: TextStyle(
-                color: Color(0xFF1C1C1C),
-                fontSize: 13,
-              ),
-              textAlign: TextAlign.start,
-            ),
-
-            const SizedBox(height: 20),
-
-            // Upload Business Logo
-            const Text(
-              "Upload Business Logo",
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 14,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const KoreUploadCard(
-              label: "Upload Your Business Logo",
-              hint: "Max 3 MB",
-              icon: Icons.cloud_upload_outlined,
-            ),
-            const SizedBox(height: 24),
-
-            // Business Name (Registered)
-            const KoreTextField(
-              label: "Business Name (AS REGISTERED)",
-              hint: "e.g., JM Home Services LLC",
-            ),
-            const SizedBox(height: 16),
-
-            // Business Name (DBA)
-            const KoreTextField(
-              label: "Business Name (DBA)",
-              hint: "e.g., JM Home Services",
-            ),
-            const SizedBox(height: 16),
-
-            // Registrant First and Last Name
-            const KoreTextField(
-              label: "First Name",
-              hint: "Jacob",
-            ),
-            const SizedBox(height: 16),
-            const KoreTextField(
-              label: "Last Name",
-              hint: "Meikle",
-            ),
-            const SizedBox(height: 16),
-
-            // Role dropdown
-            const Text(
-              "Role",
-              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-            ),
-            const SizedBox(height: 8),
-            CustomSingleSelectDropdown(
-              hint: "Select your role",
-              items: roleOptions,
-              selectedItem: selectedRole,
-              onChanged: (value) {
-                setState(() {
-                  selectedRole = value;
-                });
-              },
-            ),
-            const SizedBox(height: 16),
-
-            // Business Address
-            TextField(
-              decoration: InputDecoration(
-                hintText: "Business Address",
-                filled: true,
-                fillColor: Colors.white,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Subtext
+              const Text(
+                "We need to collect your personal business information.",
+                style: TextStyle(
+                  color: Color(0xFF1C1C1C),
+                  fontSize: 13,
                 ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Color(0xFF0E7A60)),
+                textAlign: TextAlign.start,
+              ),
+
+              const SizedBox(height: 20),
+
+              // Upload Business Logo
+              const Text(
+                "Upload Business Logo",
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
                 ),
               ),
-            ),
+              const SizedBox(height: 8),
+              Obx(() => KoreUploadCard(
+                label: "Upload Your Business Logo",
+                hint: providerController.businessLogoPath.isNotEmpty
+                    ? "Logo selected"
+                    : "Max 3 MB",
+                icon: Icons.cloud_upload_outlined,
+                onTap: _pickImage,
+              )),
+              const SizedBox(height: 24),
 
-            const SizedBox(height: 16),
-
-            // Phone number row
-            Row(
-              children: [
-                // Country code dropdown
-                Container(
-                  width: 100,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.grey.shade300),
-                  ),
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String>(
-                      value: selectedCountryCode,
-                      isDense: true,
-                      isExpanded: true,
-                      items: const [
-                        DropdownMenuItem(value: "+1", child: Text("+1")),
-                        DropdownMenuItem(value: "+44", child: Text("+44")),
-                        DropdownMenuItem(value: "+91", child: Text("+91")),
-                      ],
-                      onChanged: (value) {
-                        setState(() {
-                          selectedCountryCode = value!;
-                        });
-                      },
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                // Phone number input
-                Expanded(
-                  child: TextField(
-                    decoration: InputDecoration(
-                      hintText: "Phone Number",
-                      filled: true,
-                      fillColor: Colors.white,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey.shade300),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey.shade300),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFF0E7A60)),
-                      ),
-                    ),
-                    keyboardType: TextInputType.phone,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            // Business Website
-            TextField(
-              decoration: InputDecoration(
-                hintText: "Business Website",
-                filled: true,
-                fillColor: Colors.white,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Color(0xFF0E7A60)),
-                ),
+              // Business Name (Registered)
+              KoreTextField(
+                label: "Business Name (AS REGISTERED)",
+                hint: "e.g., JM Home Services LLC",
+                controller: businessNameRegisteredController,
               ),
-            ),
-            const SizedBox(height: 24),
+              const SizedBox(height: 16),
 
-            // Business Hours
-            const Text(
-              "Business Hours",
-              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-            ),
-            const SizedBox(height: 8),
-            InkWell(
-              onTap: () {
-                _showBusinessHoursBottomSheet();
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey.shade300),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            "Set Your Business Hours",
-                            style: TextStyle(
-                              color: Color(0xFF1C1C1C),
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            _getBusinessHoursSummary(),
-                            style: TextStyle(
-                              color: Colors.grey.shade600,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Icon(Icons.chevron_right, color: Colors.grey.shade400),
-                  ],
-                ),
+              // Business Name (DBA)
+              KoreTextField(
+                label: "Business Name (DBA)",
+                hint: "e.g., JM Home Services",
+                controller: businessNameDBAController,
               ),
-            ),
-            const SizedBox(height: 20),
+              const SizedBox(height: 16),
 
-            // Services Provided
-            const Text(
-              "Services Provided",
-              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-            ),
-            const SizedBox(height: 8),
-            CustomMultiSelectDropdown(
-              hint: "Select Services",
-              items: availableServices,
-              selectedItems: selectedServices,
-              onChanged: (selected) {
-                setState(() {
-                  selectedServices = selected;
-                });
-              },
-            ),
-            const SizedBox(height: 20),
-            
-            // Hourly Rate Section
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: const Color(0xFF0E7A60).withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFF0E7A60), width: 0.5),
+              // First Name
+              KoreTextField(
+                label: "First Name",
+                hint: "Jacob",
+                controller: firstNameController,
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              const SizedBox(height: 16),
+
+              // Last Name
+              KoreTextField(
+                label: "Last Name",
+                hint: "Meikle",
+                controller: lastNameController,
+              ),
+              const SizedBox(height: 16),
+
+              // Email
+              KoreTextField(
+                label: "Email",
+                hint: "your@email.com",
+                controller: emailController,
+                keyboardType: TextInputType.emailAddress,
+              ),
+              const SizedBox(height: 16),
+
+              // Password
+              KoreTextField(
+                label: "Password",
+                hint: "Enter your password",
+                controller: passwordController,
+                isPassword: true,
+              ),
+              const SizedBox(height: 16),
+
+              // Confirm Password
+              KoreTextField(
+                label: "Confirm Password",
+                hint: "Confirm your password",
+                controller: confirmPasswordController,
+                isPassword: true,
+              ),
+              const SizedBox(height: 16),
+
+              // Role dropdown
+              const Text(
+                "Role",
+                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+              ),
+              const SizedBox(height: 8),
+              CustomSingleSelectDropdown(
+                hint: "Select your role",
+                items: roleOptions,
+                selectedItem: providerController.providerRole.value,
+                onChanged: (value) {
+                  providerController.providerRole(value ?? '');
+                  setState(() {}); // Add this if the dropdown doesn't update visually
+                },
+              ),
+              const SizedBox(height: 16),
+
+              // Business Address Street
+              KoreTextField(
+                label: "Business Address Street",
+                hint: "123 Main Street",
+                controller: businessAddressStreetController,
+              ),
+              const SizedBox(height: 16),
+
+              // Business Address City, State, Zip Code Row
+              Row(
                 children: [
-                  Row(
-                    children: [
-                      Container(
-                        width: 8,
-                        height: 8,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF0E7A60),
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      const Text(
-                        "Enter Your Hourly Rate",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF1C1C1C),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  const Padding(
-                    padding: EdgeInsets.only(left: 18),
-                    child: Text(
-                      "Set how much you charge per hour",
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Color(0xFF1C1C1C),
-                      ),
+                  Expanded(
+                    child: KoreTextField(
+                      label: "City",
+                      hint: "New York",
+                      controller: businessAddressCityController,
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: KoreTextField(
+                      label: "State",
+                      hint: "NY",
+                      controller: businessAddressStateController,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: KoreTextField(
+                      label: "Zip Code",
+                      hint: "10001",
+                      controller: businessAddressZipCodeController,
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // Phone number row
+              const Text(
+                "Phone Number",
+                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  // Country code dropdown
                   Container(
+                    width: 100,
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(color: Colors.grey.shade300),
                     ),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 32,
-                          height: 32,
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade100,
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Center(
-                            child: Text(
-                              "\$",
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
-                                color: Color(0xFF888888),
-                              ),
-                            ),
-                          ),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        value: selectedCountryCode,
+                        isDense: true,
+                        isExpanded: true,
+                        items: const [
+                          DropdownMenuItem(value: "+1", child: Text("+1")),
+                          DropdownMenuItem(value: "+44", child: Text("+44")),
+                          DropdownMenuItem(value: "+91", child: Text("+91")),
+                        ],
+                        onChanged: (value) {
+                          setState(() {
+                            selectedCountryCode = value!;
+                          });
+                        },
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  // Phone number input
+                  Expanded(
+                    child: TextField(
+                      controller: phoneController,
+                      decoration: InputDecoration(
+                        hintText: "Phone Number",
+                        filled: true,
+                        fillColor: Colors.white,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: TextField(
-                            controller: hourlyRateController,
-                            keyboardType: TextInputType.number,
-                            decoration: const InputDecoration(
-                              border: InputBorder.none,
-                              hintText: "10",
-                              hintStyle: TextStyle(
-                                color: Color(0xFF888888),
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                              color: Color(0xFF1C1C1C),
-                            ),
-                          ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
                         ),
-                      ],
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFF0E7A60)),
+                        ),
+                      ),
+                      keyboardType: TextInputType.phone,
                     ),
                   ),
                 ],
               ),
-            ),
-            const SizedBox(height: 8),
-          ],
+              const SizedBox(height: 16),
+
+              // Business Phone
+              KoreTextField(
+                label: "Business Phone",
+                hint: "+12395550110",
+                controller: businessPhoneController,
+                keyboardType: TextInputType.phone,
+              ),
+              const SizedBox(height: 16),
+
+              // Business Website
+              KoreTextField(
+                label: "Business Website",
+                hint: "www.quickfixrepairs.com",
+                controller: websiteController,
+                keyboardType: TextInputType.url,
+              ),
+              const SizedBox(height: 24),
+
+              // Business Hours
+              const Text(
+                "Business Hours",
+                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+              ),
+              const SizedBox(height: 8),
+              InkWell(
+                onTap: () {
+                  _showBusinessHoursBottomSheet();
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.grey.shade300),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              "Set Your Business Hours",
+                              style: TextStyle(
+                                color: Color(0xFF1C1C1C),
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              _getBusinessHoursSummary(),
+                              style: TextStyle(
+                                color: Colors.grey.shade600,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(Icons.chevron_right, color: Colors.grey.shade400),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // Services Provided
+              const Text(
+                "Services Provided",
+                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+              ),
+              const SizedBox(height: 8),
+              CustomMultiSelectDropdown(
+                hint: "Select Services",
+                items: availableServices,
+                selectedItems: selectedServices,
+                onChanged: (selected) {
+                  setState(() {
+                    selectedServices = selected;
+                  });
+                },
+              ),
+              const SizedBox(height: 20),
+
+              // Experience
+              KoreTextField(
+                label: "Years of Experience",
+                hint: "5",
+                controller: experienceController,
+                keyboardType: TextInputType.number,
+              ),
+              const SizedBox(height: 20),
+
+              // Hourly Rate Section
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0E7A60).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFF0E7A60), width: 0.5),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF0E7A60),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        const Text(
+                          "Enter Your Hourly Rate",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF1C1C1C),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    const Padding(
+                      padding: EdgeInsets.only(left: 18),
+                      child: Text(
+                        "Set how much you charge per hour",
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Color(0xFF1C1C1C),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey.shade300),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade100,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Center(
+                              child: Text(
+                                "\$",
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF888888),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: TextField(
+                              controller: hourlyRateController,
+                              keyboardType: TextInputType.number,
+                              decoration: const InputDecoration(
+                                border: InputBorder.none,
+                                hintText: "30",
+                                hintStyle: TextStyle(
+                                  color: Color(0xFF888888),
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                                color: Color(0xFF1C1C1C),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
         ),
-      ),
       ),
 
       bottomNavigationBar: SafeArea(
@@ -434,37 +607,11 @@ class _YourInformationScreenState extends State<YourInformationScreen> {
         right: false,
         child: Padding(
           padding: const EdgeInsets.all(16),
-          child: KoreButton(
-            text: "Next",
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const VerifyInformationScreen(),
-                ),
-              );
-            },
-          ),
+          child: Obx(() => KoreButton(
+            text: providerController.isLoading.value ? "Registering..." : "Next",
+            onPressed: providerController.isLoading.value ? null : _submitForm,
+          )),
         ),
-      ),
-    );
-  }
-
-  // Helper dropdown builder
-  Widget _buildDropdown(List<String> items, String value, Function(String?) onChanged) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade300),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: DropdownButton<String>(
-        underline: const SizedBox(),
-        isExpanded: true,
-        value: value,
-        items: items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
-        onChanged: onChanged,
       ),
     );
   }
@@ -491,24 +638,22 @@ class _YourInformationScreenState extends State<YourInformationScreen> {
     if (openDays.isEmpty) {
       return "No hours set";
     }
-    
-    // Get the first and last open days
+
     final firstDay = openDays.first.dayName.substring(0, 3);
     final lastDay = openDays.last.dayName.substring(0, 3);
-    
-    // Check if all open days have the same hours
+
     final sampleTime = "${_formatTime(openDays.first.startTime)} - ${_formatTime(openDays.first.endTime)}";
-    bool allSameHours = openDays.every((day) => 
-      day.startTime.hour == openDays.first.startTime.hour && 
-      day.startTime.minute == openDays.first.startTime.minute &&
-      day.endTime.hour == openDays.first.endTime.hour &&
-      day.endTime.minute == openDays.first.endTime.minute
+    bool allSameHours = openDays.every((day) =>
+    day.startTime.hour == openDays.first.startTime.hour &&
+        day.startTime.minute == openDays.first.startTime.minute &&
+        day.endTime.hour == openDays.first.endTime.hour &&
+        day.endTime.minute == openDays.first.endTime.minute
     );
-    
+
     if (allSameHours && openDays.length == 7 - businessHours.where((day) => !day.isOpen).length) {
       return "$firstDay - $lastDay • $sampleTime";
     }
-    
+
     return "${openDays.length} days configured";
   }
 
@@ -517,45 +662,5 @@ class _YourInformationScreenState extends State<YourInformationScreen> {
     final minute = time.minute.toString().padLeft(2, '0');
     final period = time.period == DayPeriod.am ? 'AM' : 'PM';
     return '$hour:$minute $period';
-  }
-}
-
-
-class ServiceTag extends StatelessWidget {
-  final String text;
-  final Color dotColor;
-  final Color backgroundColor;
-
-  const ServiceTag({
-    super.key,
-    required this.text,
-    required this.dotColor,
-    required this.backgroundColor, required Color textColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.circle, color: dotColor, size: 8),
-          const SizedBox(width: 6),
-          Text(
-            text,
-            style: const TextStyle(
-              fontSize: 13.5,
-              fontWeight: FontWeight.w500,
-              color: Colors.black87,
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }

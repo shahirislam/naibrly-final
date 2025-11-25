@@ -5,11 +5,13 @@ import 'package:flutter_svg/svg.dart';
 import 'package:intl/intl.dart';
 import 'package:naibrly/controller/Customer/profileController/profileController.dart';
 import 'package:naibrly/utils/app_contants.dart';
+import 'package:naibrly/utils/tokenService.dart';
 import 'package:naibrly/views/screen/Users/Profile/ProfileEdit/edit_profile.dart';
 import 'package:naibrly/views/screen/Users/Profile/PrivacyPolicy/privacy_policy_screen.dart';
 import 'package:naibrly/views/screen/Users/Profile/TermsCondition/terms_condition_screen.dart';
 import 'package:naibrly/views/screen/Users/Profile/PaymentHistory/payment_history_screen.dart';
 
+import '../../../../provider/screens/welcome_screen.dart';
 import '../../../../utils/app_colors.dart';
 import '../../../../utils/app_icon.dart';
 import '../../../base/AppText/appText.dart';
@@ -30,6 +32,7 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   final TextEditingController applycupon = TextEditingController();
   final ProfileController controller = Get.put(ProfileController());
+  final TokenService _tokenService = Get.find<TokenService>(); // Add this
   final _controller01 = ValueNotifier<bool>(false);
 
   final List<String> settingItem = [
@@ -76,7 +79,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   onPressed: () {
                     Navigator.push(context, MaterialPageRoute(builder: (builder)=>EditProfileScreen()));
-
                   },
                 ),
               ),
@@ -190,9 +192,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                 SizedBox(height: 5),
                 IosTapEffect(
-                  onTap: (){
+                  onTap: () async {
                     showCustomDialog(context);
-
                   },
                   child: Align(
                     alignment: Alignment.topLeft,
@@ -285,7 +286,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void showCustomDialog(BuildContext context) {
     showDialog(
       context: context,
-      barrierDismissible: true, // tap outside to close
+      barrierDismissible: true,
       builder: (BuildContext context) {
         return Dialog(
           backgroundColor: Colors.white,
@@ -295,7 +296,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: Padding(
             padding: const EdgeInsets.all(20.0),
             child: Column(
-              mainAxisSize: MainAxisSize.min, // wrap content
+              mainAxisSize: MainAxisSize.min,
               children: [
                 GestureDetector(
                   onTap: (){
@@ -334,13 +335,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           decoration: BoxDecoration(
                             color: AppColors.LightGray,
                             borderRadius: BorderRadius.circular(12),
-                          ), // control height via padding
+                          ),
                           alignment: Alignment.center,
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-
                               Text(
                                 "Cancel",
                                 style: TextStyle(
@@ -357,9 +357,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     SizedBox(width: MediaQuery.of(context).size.width *0.05,),
                     Expanded(
                       child: GestureDetector(
-                        onTap: (){
-                          Navigator.of(context).pop(); // Close dialog
-                          //Get.to(SignInScreen());
+                        onTap: () async {
+                          // Close dialog first
+                          Navigator.of(context).pop();
+
+                          // Perform logout
+                          await _performLogout();
                         },
                         child: Container(
                           height: 44,
@@ -372,7 +375,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             mainAxisSize: MainAxisSize.min,
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-
                               Text(
                                 "Log Out",
                                 style: TextStyle(
@@ -389,14 +391,43 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ],
                 ),
                 SizedBox(height: 8),
-
-
-
               ],
             ),
           ),
         );
       },
     );
+  }
+
+  Future<void> _performLogout() async {
+    try {
+      // Clear tokens
+      await _tokenService.removeToken();
+      await _tokenService.removeUserId();
+
+      // Clear any other stored data if needed
+      // await _tokenService.clearAll();
+
+      // Navigate to login/welcome screen
+      Get.offAll(() => WelcomeScreen()); // Replace with your actual login/welcome screen
+
+      // Show success message
+      Get.snackbar(
+        'Success',
+        'Logged out successfully',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+      );
+    } catch (e) {
+      // Show error message
+      Get.snackbar(
+        'Error',
+        'Failed to logout: $e',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
   }
 }

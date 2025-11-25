@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
 import 'colors.dart';
 
-
 class KoreTextField extends StatelessWidget {
   final String label;
   final String? color;
   final String hint;
   final TextEditingController? controller;
+  final bool isPassword;
+  final TextInputType? keyboardType;
 
   const KoreTextField({
-     required this.label,
+    required this.label,
     this.color,
     required this.hint,
     this.controller,
+    this.isPassword = false,
+    this.keyboardType,
     super.key,
   });
 
@@ -21,10 +24,18 @@ class KoreTextField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600, color: KoreColors.primary)),
+        Text(
+          label,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: KoreColors.primary
+          ),
+        ),
         const SizedBox(height: 6),
         TextField(
           controller: controller,
+          obscureText: isPassword,
+          keyboardType: keyboardType,
           decoration: InputDecoration(
             hintText: hint,
             filled: true,
