@@ -239,7 +239,7 @@ class _HomeScreenState extends State<HomeScreen> {
         backgroundColor: AppColors.White,
         title: RichText(
           text: TextSpan(
-            text: "Welcome to ",
+            text: "Welcome to user ",
             style: TextStyle(
               color: AppColors.black,
               fontSize: 16,

@@ -20,6 +20,9 @@ class ClientFeedbackSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Debug print to check if data is coming through
+    print('📱 ClientFeedbackSection building with ${feedbackList.length} items');
+
     return Container(
       margin: margin ?? const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       child: Column(
@@ -33,9 +36,14 @@ class ClientFeedbackSection extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
+
+          // Show feedback items directly (no empty state check)
           ...feedbackList.map((feedback) => _buildFeedbackItem(context, feedback)),
+
           const SizedBox(height: 12),
-          if (hasMoreFeedback)
+
+          // Load more button
+          if (hasMoreFeedback && feedbackList.isNotEmpty)
             Center(
               child: GestureDetector(
                 onTap: onLoadMore,
@@ -61,6 +69,8 @@ class ClientFeedbackSection extends StatelessWidget {
   }
 
   Widget _buildFeedbackItem(BuildContext context, ClientFeedback feedback) {
+    print('🔄 Building feedback item: ${feedback.clientName} - ${feedback.comment}');
+
     return Column(
       children: [
         Padding(
@@ -72,7 +82,10 @@ class ClientFeedbackSection extends StatelessWidget {
                 children: [
                   CircleAvatar(
                     radius: 20,
-                    backgroundImage: AssetImage(feedback.clientImage),
+                    // FIXED: Use NetworkImage for URL images
+                    backgroundImage: feedback.clientImage.isNotEmpty
+                        ? NetworkImage(feedback.clientImage)
+                        : const AssetImage('assets/images/default_avatar.png') as ImageProvider,
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -82,7 +95,7 @@ class ClientFeedbackSection extends StatelessWidget {
                         Row(
                           children: [
                             Text(
-                              feedback.clientName,
+                              feedback.clientName.isNotEmpty ? feedback.clientName : 'Anonymous',
                               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                                 fontWeight: FontWeight.w600,
                                 color: Colors.black,
@@ -124,6 +137,16 @@ class ClientFeedbackSection extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 8),
+              if (feedback.serviceName.isNotEmpty) ...[
+                Text(
+                  'Service: ${feedback.serviceName}',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: KoreColors.textLight,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 8),
+              ],
               if (feedback.comment.isNotEmpty) ...[
                 _buildCommentText(context, feedback),
               ],
@@ -140,8 +163,8 @@ class ClientFeedbackSection extends StatelessWidget {
 
   Widget _buildCommentText(BuildContext context, ClientFeedback feedback) {
     const int maxLines = 2;
-    const int maxChars = 120; // Approximate characters for 2 lines
-    
+    const int maxChars = 120;
+
     if (feedback.comment.length <= maxChars || feedback.isExpanded) {
       return Text(
         feedback.comment,
@@ -178,7 +201,7 @@ class ClientFeedbackSection extends StatelessWidget {
   String _getTimeAgo(DateTime date) {
     final now = DateTime.now();
     final difference = now.difference(date);
-    
+
     if (difference.inDays > 30) {
       final months = (difference.inDays / 30).floor();
       return '$months Month${months > 1 ? 's' : ''} ago';
@@ -187,8 +210,12 @@ class ClientFeedbackSection extends StatelessWidget {
       return '$weeks Week${weeks > 1 ? 's' : ''} ago';
     } else if (difference.inDays > 0) {
       return '${difference.inDays} Day${difference.inDays > 1 ? 's' : ''} ago';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours} Hour${difference.inHours > 1 ? 's' : ''} ago';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes} Minute${difference.inMinutes > 1 ? 's' : ''} ago';
     } else {
-      return 'Today';
+      return 'Just now';
     }
   }
 }

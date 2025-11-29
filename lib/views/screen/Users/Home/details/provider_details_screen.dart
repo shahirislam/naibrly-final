@@ -39,38 +39,21 @@ class _ProviderDetailsScreenState extends State<ProviderDetailsScreen> {
   }
 
   void _loadInitialFeedback() {
-    // Load first 3 feedback items
-    _feedbackList = ClientFeedback.demo().take(3).toList();
-    _hasMoreFeedback = ClientFeedback.demo().length > 3;
+
   }
 
   void _loadMoreFeedback() {
     setState(() {
       final currentCount = _feedbackList.length;
-      final allFeedback = ClientFeedback.demo();
-      if (currentCount < allFeedback.length) {
-        final nextBatch = allFeedback.skip(currentCount).take(3).toList();
-        _feedbackList.addAll(nextBatch);
-        _hasMoreFeedback = _feedbackList.length < allFeedback.length;
-      }
+
+
     });
   }
 
   void _toggleFeedbackExpansion(String feedbackId) {
     setState(() {
       final feedbackIndex = _feedbackList.indexWhere((fb) => fb.id == feedbackId);
-      if (feedbackIndex != -1) {
-        final feedback = _feedbackList[feedbackIndex];
-        _feedbackList[feedbackIndex] = ClientFeedback(
-          id: feedback.id,
-          clientName: feedback.clientName,
-          clientImage: feedback.clientImage,
-          rating: feedback.rating,
-          comment: feedback.comment,
-          date: feedback.date,
-          isExpanded: !feedback.isExpanded,
-        );
-      }
+
     });
   }
 

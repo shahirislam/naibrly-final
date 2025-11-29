@@ -1,5 +1,6 @@
+// widgets/orders/filter_tabs.dart
 import 'package:flutter/material.dart';
-import '../../viewmodels/orders_viewmodel.dart';
+import '../../controllers/orders_controller.dart';
 import '../colors.dart';
 
 class FilterTabs extends StatelessWidget {
@@ -31,8 +32,8 @@ class FilterTabs extends StatelessWidget {
                 decoration: BoxDecoration(
                   border: Border(
                     bottom: BorderSide(
-                      color: currentFilter == OrderFilter.open 
-                          ? Colors.black 
+                      color: currentFilter == OrderFilter.open
+                          ? Colors.black
                           : Colors.transparent,
                       width: 1,
                     ),
@@ -45,12 +46,12 @@ class FilterTabs extends StatelessWidget {
                       'Open',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.w600,
-                        color: currentFilter == OrderFilter.open 
-                            ? Colors.black 
+                        color: currentFilter == OrderFilter.open
+                            ? Colors.black
                             : KoreColors.textLight,
                       ),
                     ),
-                    if (currentFilter == OrderFilter.open) ...[
+                    if (currentFilter == OrderFilter.open && openCount > 0) ...[
                       const SizedBox(width: 6),
                       Container(
                         width: 4,
@@ -66,7 +67,7 @@ class FilterTabs extends StatelessWidget {
               ),
             ),
           ),
-          
+
           // Closed tab
           Expanded(
             child: GestureDetector(
@@ -76,8 +77,8 @@ class FilterTabs extends StatelessWidget {
                 decoration: BoxDecoration(
                   border: Border(
                     bottom: BorderSide(
-                      color: currentFilter == OrderFilter.closed 
-                          ? Colors.black 
+                      color: currentFilter == OrderFilter.closed
+                          ? Colors.black
                           : Colors.transparent,
                       width: 1,
                     ),
@@ -90,8 +91,8 @@ class FilterTabs extends StatelessWidget {
                       'Closed',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.w600,
-                        color: currentFilter == OrderFilter.closed 
-                            ? Colors.black 
+                        color: currentFilter == OrderFilter.closed
+                            ? Colors.black
                             : KoreColors.textLight,
                       ),
                     ),

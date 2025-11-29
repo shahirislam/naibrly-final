@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:naibrly/views/base/AppText/appText.dart';
 import '../../models/provider_profile.dart';
 import '../colors.dart';
@@ -129,24 +130,48 @@ class _ProviderHeaderState extends State<ProviderHeader> {
               ),
             ],
           ),
-          // Right side: Balance with overlapping icon and dropdown
-          Container(
-            height: 55,
-            decoration: BoxDecoration(
-              color: Colors.transparent,
-            ),
-            child: Stack(
-              children: [
-                Image.asset("assets/images/Group 2085663248 (1).png"),
-                Positioned(
-                    top: 28,
-                    left: 6,
-                    child: AppText("\$5892",fontWeight: FontWeight.bold,fontSize: 14,color: Color(0xFF0E7A60),)
-                ),
-              ],
-            ),
-          ),
 
+          // Right side: Balance with overlapping icon and dropdown
+          Row(
+            children: [
+              // Balance container with image background
+              Container(
+                height: 55,
+                width: 80,
+                decoration: BoxDecoration(
+                  color: Colors.transparent,
+                ),
+                child: Stack(
+                  children: [
+                    Image.asset("assets/images/Group 2085663248 (1).png"),
+                    Positioned(
+                        top: 28,
+                        left: 6,
+                        child: AppText(
+                          "\$5892",
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                          color: Color(0xFF0E7A60),
+                        )
+                    ),
+                  ],
+                ),
+              ),
+
+              // Dropdown menu button
+              const SizedBox(width: 8),
+              CompositedTransformTarget(
+                link: _layerLink,
+                child: IconButton(
+                  onPressed: _toggleDropdown,
+                  icon: Icon(
+                    Icons.more_vert,
+                    color: Colors.black,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
@@ -161,15 +186,23 @@ class _ProviderHeaderState extends State<ProviderHeader> {
       },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        alignment: Alignment.centerLeft,
-        child: Text(
-          title,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: Colors.black87,
-          ),
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              size: 18,
+              color: Colors.black87,
+            ),
+            const SizedBox(width: 12),
+            Text(
+              title,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Colors.black87,
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 }
-

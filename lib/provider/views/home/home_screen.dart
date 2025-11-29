@@ -1,184 +1,258 @@
+// screens/home_screen.dart
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../../viewmodels/home_viewmodel.dart';
-import '../../widgets/home/provider_header.dart';
-import '../../widgets/home/request_card.dart';
+import 'package:get/get.dart';
+import '../../controllers/home_controller.dart';
+import '../../widgets/colors.dart';
 import '../../widgets/home/analytics_section.dart';
 import '../../widgets/home/client_feedback_section.dart';
-import '../../widgets/home/bottom_navigation.dart';
-import '../../widgets/colors.dart';
+import '../../widgets/home/provider_header.dart';
+import '../../widgets/home/request_card.dart';
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
-
-  @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen> {
+class ProviderHomeScreen extends StatelessWidget {
+  const ProviderHomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (context) => HomeViewModel(),
-      child: Scaffold(
-        backgroundColor: KoreColors.background,
-        body: Consumer<HomeViewModel>(
-          builder: (context, viewModel, child) {
-            return SafeArea(
-              child: Column(
-                children: [
-                  // Main content
-                  Expanded(
-                    child: SingleChildScrollView(
-                      child: Column(
+    return GetBuilder<ProviderHomeController>(
+      init: ProviderHomeController(),
+      builder: (controller) {
+        return Scaffold(
+          backgroundColor: KoreColors.background,
+          body: SafeArea(
+            child: RefreshIndicator(
+              onRefresh: () => controller.refreshData(),
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: Column(
+                  children: [
+                    // Provider header (always show)
+                    ProviderHeader(profile: controller.providerProfile.value),
+
+                    // Loading state
+                    Obx(() {
+                      if (controller.isLoading.value) {
+                        return _buildLoadingState(context);
+                      }
+
+                      // Error state
+                      if (controller.errorMessage.value.isNotEmpty) {
+                        return _buildErrorState(context, controller);
+                      }
+
+                      // Data state - show content with conditional layout
+                      return Column(
                         children: [
-                          // Provider header
-                          ProviderHeader(profile: viewModel.providerProfile),
-                          
                           // Conditional layout based on active requests
-                          if (viewModel.activeRequests.isNotEmpty) ...[
+                          if (controller.activeRequests.isNotEmpty) ...[
                             // Active requests section (if there are incoming requests)
-                            _buildActiveRequestsSection(viewModel),
-                            
+                            _buildActiveRequestsSection(context, controller),
+
                             // Analytics section
-                            AnalyticsSection(analytics: viewModel.analytics),
+                            AnalyticsSection(analytics: controller.analytics.value),
+
+                            // Accepted requests list
+                            _buildAcceptedRequestsSection(context, controller),
                           ] else ...[
                             // Analytics section first (if no incoming requests)
-                            AnalyticsSection(analytics: viewModel.analytics),
-                            
+                            AnalyticsSection(analytics: controller.analytics.value),
+
                             // Accepted requests list
-                            _buildAcceptedRequestsSection(viewModel),
+                            _buildAcceptedRequestsSection(context, controller),
                           ],
-                          
+
                           // Client feedback section
                           ClientFeedbackSection(
-                            feedbackList: viewModel.clientFeedback,
+                            feedbackList: controller.clientFeedback,
                             onToggleExpansion: (feedbackId) {
-                              viewModel.toggleFeedbackExpansion(feedbackId);
+                              controller.toggleFeedbackExpansion(feedbackId);
                             },
                             onLoadMore: () {
-                              viewModel.loadMoreFeedback();
+                              controller.loadMoreFeedback();
                             },
-                            hasMoreFeedback: viewModel.hasMoreFeedback,
                           ),
-                          
+
                           const SizedBox(height: 20),
                         ],
-                      ),
-                    ),
-                  ),
-                ],
+                      );
+                    }),
+                  ],
+                ),
               ),
-            );
-          },
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildLoadingState(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(40),
+      child: const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text('Loading requests...'),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildAcceptedRequestsSection(HomeViewModel viewModel) {
+  Widget _buildErrorState(BuildContext context, ProviderHomeController controller) {
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8),
+      margin: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Text(
-              'Accepted Requests',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w400,
-                color: KoreColors.textDark,
-              ),
+          const Icon(
+            Icons.error_outline,
+            color: Colors.red,
+            size: 48,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Error loading data',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              color: Colors.red,
+              fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 8),
-          if (viewModel.acceptedRequests.isEmpty)
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 20),
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Center(
-                child: Text(
-                  'No accepted requests',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: KoreColors.textLight,
-                  ),
-                ),
-              ),
-            )
-          else
-            ...viewModel.acceptedRequests.map((request) => RequestCard(
-              request: request,
-              onAccept: () => viewModel.acceptRequest(request.id),
-              onCancel: () => viewModel.cancelRequest(request.id),
-            )),
+          const SizedBox(height: 10),
+          Text(
+            controller.errorMessage.value,
+            style: Theme.of(context).textTheme.bodySmall,
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 20),
+          ElevatedButton(
+            onPressed: () => controller.loadHomeData(),
+            child: const Text('Retry'),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildActiveRequestsSection(HomeViewModel viewModel) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Text(
-              'Active Requests',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w400,
-                color: KoreColors.textDark,
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
-          if (viewModel.activeRequests.isEmpty)
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 20),
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Center(
-                child: Text(
-                  'No active requests',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: KoreColors.textLight,
-                  ),
+  Widget _buildActiveRequestsSection(BuildContext context, ProviderHomeController controller) {
+    return Obx(() {
+      return Container(
+        margin: const EdgeInsets.symmetric(vertical: 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Text(
+                'Active Requests',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w400,
+                  color: KoreColors.textDark,
                 ),
               ),
-            )
-          else
-            ...viewModel.activeRequests.map((request) => RequestCard(
-              request: request,
-              onAccept: () => viewModel.acceptRequest(request.id),
-              onCancel: () => viewModel.cancelRequest(request.id),
-            )),
-        ],
-      ),
-    );
+            ),
+            const SizedBox(height: 8),
+            if (controller.activeRequests.isEmpty)
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 20),
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Center(
+                  child: Text(
+                    'No active requests',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: KoreColors.textLight,
+                    ),
+                  ),
+                ),
+              )
+            else
+              ...controller.activeRequests.map((request) => RequestCard(
+                request: request,
+                onAccept: () => controller.acceptRequest(request.id),
+                onCancel: () => controller.cancelRequest(request.id),
+              )),
+          ],
+        ),
+      );
+    });
   }
 
+  Widget _buildAcceptedRequestsSection(BuildContext context, ProviderHomeController controller) {
+    return Obx(() {
+      return Container(
+        margin: const EdgeInsets.symmetric(vertical: 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Text(
+                'Accepted Requests',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w400,
+                  color: KoreColors.textDark,
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            if (controller.acceptedRequests.isEmpty)
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 20),
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Center(
+                  child: Text(
+                    'No accepted requests',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: KoreColors.textLight,
+                    ),
+                  ),
+                ),
+              )
+            else
+              ...controller.acceptedRequests.map((request) => RequestCard(
+                request: request,
+                onAccept: () => controller.acceptRequest(request.id),
+                onCancel: () => controller.cancelRequest(request.id),
+              )),
+          ],
+        ),
+      );
+    });
+  }
 }

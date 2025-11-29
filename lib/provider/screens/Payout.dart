@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:naibrly/provider/screens/profile/ProfilePage.dart';
+import 'package:naibrly/provider/screens/profile/ProviderProfilePage.dart';
 import 'package:naibrly/provider/provider_main.dart';
 
 import 'home&manage/ProfileDashboardScreen.dart';

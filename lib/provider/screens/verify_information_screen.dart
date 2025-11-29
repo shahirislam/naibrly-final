@@ -322,7 +322,7 @@ class _VerifyInformationScreenState extends State<VerifyInformationScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const SelectServiceAreaScreen(),
+                      builder: (context) =>  SelectServiceAreaScreen(),
                     ),
                   );
                 }

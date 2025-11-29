@@ -1,3 +1,4 @@
+// views/screen/auth/login_screen.dart
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
@@ -5,17 +6,31 @@ import 'package:get/get.dart';
 import 'package:naibrly/utils/app_colors.dart';
 import 'package:naibrly/views/base/appTextfield/appTextfield.dart';
 import 'package:naibrly/views/screen/Users/auth/sign_up.dart';
-import '../../../controller/Customer/authCustomer/signInController.dart';
+import '../../../controller/auth_controller.dart';
 import '../../base/AppText/appText.dart';
 import '../../base/Ios_effect/iosTapEffect.dart';
 import '../../base/primaryButton/primary_button.dart';
 import 'base/or/orLogin.dart';
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
   LoginScreen({super.key});
 
-  final SignInController controller = Get.put(SignInController());
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
 
+class _LoginScreenState extends State<LoginScreen> {
+  final AuthController controller = Get.put(AuthController());
+
+  @override
+  void initState() {
+    super.initState();
+    // Set default email and password after the widget is built
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      controller.emailController.text = "prov1@gmail.com";
+      controller.passwordController.text = "Password@123";
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +52,7 @@ class LoginScreen extends StatelessWidget {
               ),
             ),
             AppText(
-              "Welcome Back",
+              "Welcome Back!",
               fontWeight: FontWeight.w400,
               fontSize: 28,
               color: AppColors.textcolor,
@@ -50,25 +65,23 @@ class LoginScreen extends StatelessWidget {
               color: AppColors.textcolor,
             ),
             SizedBox(height: size.height * 0.03),
-            AppTextField(controller: controller.emailcontroller, hint: "Email Address"),
+            AppTextField(controller: controller.emailController, hint: "Email Address"),
             SizedBox(height: 15),
             Obx(
                   () => AppTextField(
-                obscure: controller.passShowHide.value,
-                // ✅ dynamic obscure
-                keyboardType: TextInputType.twitter,
-                controller: controller.passwordcontroller,
-                // ✅ use passwordController here
+                obscure: !controller.passShowHide.value,
+                keyboardType: TextInputType.text,
+                controller: controller.passwordController,
                 hint: "Password",
                 suffix: IconButton(
                   icon: Icon(
                     controller.passShowHide.value
-                        ? CupertinoIcons.eye_slash
-                        : CupertinoIcons.eye,
+                        ? CupertinoIcons.eye
+                        : CupertinoIcons.eye_slash,
                     color: Colors.white38,
                   ),
                   onPressed: () {
-                    controller.toggle();
+                    controller.togglePasswordVisibility();
                   },
                 ),
               ),
@@ -84,18 +97,12 @@ class LoginScreen extends StatelessWidget {
               ),
             ),
             SizedBox(height: size.height * 0.04),
-            Obx((){
+            Obx(() {
               return PrimaryButton(
                 loading: controller.isLoading.value,
                 text: "Login",
                 onTap: () {
-                  final email = controller.emailcontroller.text;
-                  final password = controller.passwordcontroller.text;
-                  if(email.isEmpty || password.isEmpty){
-                    showError(context,"Please fill the field");
-                  }else{
-                    controller.loginUser(context, email, password);
-                  }
+                  controller.loginUser(context);
                 },
               );
             }),
@@ -106,14 +113,14 @@ class LoginScreen extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 GoogleOrAppcle(onTap: () {}, icon: "assets/icons/Group (5).svg"),
-                SizedBox(width: 16,),
+                SizedBox(width: 16),
                 GoogleOrAppcle(onTap: () {}, icon: "assets/icons/Google (1).svg"),
               ],
             ),
             SizedBox(height: size.height * 0.05),
             IosTapEffect(
-              onTap: (){
-                Navigator.push(context, MaterialPageRoute(builder: (builder)=> SignUp()));
+              onTap: () {
+                Navigator.push(context, MaterialPageRoute(builder: (builder) => SignUp()));
               },
               child: Align(
                 alignment: Alignment.center,
@@ -121,34 +128,15 @@ class LoginScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      AppText("Create account",fontSize: 16,fontWeight: FontWeight.w400,color: AppColors.secondary,),
-                      Container(height: 2,color: AppColors.secondary.withOpacity(0.50),),
+                      AppText("Create account", fontSize: 16, fontWeight: FontWeight.w400, color: AppColors.secondary),
+                      Container(height: 2, color: AppColors.secondary.withOpacity(0.50)),
                     ],
                   ),
                 ),
               ),
             ),
-
           ],
         ),
-      ),
-    );
-  }
-
-  void showError(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message, style: const TextStyle(color: Colors.white)),
-        backgroundColor: Colors.red,
-      ),
-    );
-  }
-
-  void showSuccess(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message, style: const TextStyle(color: Colors.white)),
-        backgroundColor: Colors.green,
       ),
     );
   }

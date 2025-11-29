@@ -4,6 +4,8 @@ import 'package:http/http.dart'as http;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:naibrly/provider/provider_main.dart';
+import 'package:naibrly/provider/screens/profile/ProviderProfilePage.dart';
 import 'package:naibrly/utils/logger.dart';
 import 'package:naibrly/views/screen/Users/Home/home_screen.dart';
 
@@ -11,7 +13,12 @@ import '../../../utils/app_contants.dart';
 import '../../../utils/tokenService.dart';
 import '../../../views/base/bottomNav/bottomNavWrapper.dart';
 import '../../networkService/networkService.dart';
-
+class LoginController extends GetxController{
+  RxBool passShowHide = false.obs;
+  void toggle(){
+    passShowHide.value = ! passShowHide.value;
+  }
+}
 class SignInController extends GetxController{
   final TextEditingController emailcontroller = TextEditingController();
   final TextEditingController passwordcontroller = TextEditingController();
@@ -52,19 +59,24 @@ class SignInController extends GetxController{
         final data = jsonDecode(response.body);
         final token = data['data']['token'];
         final id = data['data']['user']['id'];
+        final role = data['data']['user']['role'];
+        if(role=="customer"){
+          Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context)=>ProviderProfilePage()), (Route<dynamic>route)=>false);
+        }else{
+          Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context)=>const NairblyApp()), (Route<dynamic>route)=>false);
+        }
         await TokenService().saveToken(token);
         await TokenService().saveUserId(id);
-        showSuccess(context, "Login Successful!");
-        Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context)=>BottomMenuWrappers()), (Route<dynamic>route)=>false);
+        //showSuccess(context, "Login Successful!");
       } else {
         final data = jsonDecode(response.body);
         final message = data["message"] ?? "Login failed. Please try again.";
         Logger.log("Error: ${response.body}", type: "error");
-        showError(context, message);
+        //showError(context, message);
       }
     } catch (e, stackTrace) {
       Logger.log("Unexpected error: $e\n$stackTrace", type: "error");
-      showError(context, "Something went wrong. Please try again.");
+      //showError(context, "Something went wrong. Please try again.");
     } finally {
       isLoading.value = false;
     }

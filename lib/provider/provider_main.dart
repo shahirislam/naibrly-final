@@ -1,15 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:get/get_core/src/get_main.dart';
+import 'package:get/get_instance/src/extension_instance.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:naibrly/provider/services/api_service.dart';
+import 'package:naibrly/provider/services/home_api_service.dart';
+
 import 'package:naibrly/provider/views/home/home_screen.dart';
 import 'package:naibrly/provider/views/orders/orders_screen.dart';
 import 'package:naibrly/provider/screens/notifications_screen.dart';
-import 'package:naibrly/provider/screens/profile/ProfilePage.dart';
+import 'package:naibrly/provider/screens/profile/ProviderProfilePage.dart';
 import 'package:naibrly/provider/screens/splash_screen.dart';
 import 'package:naibrly/provider/widgets/colors.dart';
 import 'package:naibrly/provider/widgets/home/bottom_navigation.dart';
 
-void main() {
+
+import 'controllers/home_controller.dart';
+
+void main() async   {
   runApp(const MyApp());
+
 }
 
 class MyApp extends StatelessWidget {
@@ -49,10 +58,10 @@ class _NairblyAppState extends State<NairblyApp> {
   int _currentBottomNavIndex = 0;
 
   final List<Widget> _screens = [
-    const HomeScreen(),
+    const ProviderHomeScreen(),
     const OrdersScreen(),
     const NotificationsScreen(),
-    const ProfilePage(),
+    const ProviderProfilePage(),
   ];
 
   @override

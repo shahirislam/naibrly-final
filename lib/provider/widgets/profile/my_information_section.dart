@@ -1,5 +1,10 @@
+// widgets/profile/my_information_section.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:get/get.dart';
+import '../../../models/user_model_provider.dart';
+import '../../controllers/ProviderProfileController.dart';
+
 import '../../screens/profile/update_information_screen.dart';
 
 class MyInformationSection extends StatelessWidget {
@@ -7,22 +12,105 @@ class MyInformationSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildSectionTitle(context, "My Information", "Edit"),
-        const SizedBox(height: 15),
-        _buildInfoWithSvg(context, 'assets/profile/person.svg', "Jacob Meikle"),
-        _buildInfoWithSvg(context, 'assets/profile/person.svg', "Jacob Brothers"),
-        _buildInfoWithSvg(context, 'assets/profile/person.svg', "Owner"),
-        _buildInfoWithSvg(context, 'assets/profile/location.svg', "123 Oak Street Springfield, IL 62704"),
-        _buildInfoWithSvg(context, 'assets/profile/phone.svg', "+1 012 345 6987"),
-        _buildInfoWithSvg(context, 'assets/profile/mail.svg', "swe.monir@outlook.com"),
-        _buildInfoWithSvg(context, 'assets/profile/mail.svg', "www.jacobbrothers.com"),
-        _buildInfoWithSvg(context, 'assets/profile/mail.svg', "Service Area zip: 62704, 62705"),
-        _buildInfoWithTimeAndSvg(context, 'assets/profile/calender.svg', "Mon - Fir", "9:00 AM - 6:00 PM"),
-        _buildInfoWithSvg(context, 'assets/profile/calender.svg', "Joined: Aug 5, 2023"),
-      ],
+    final ProviderProfileController controller = Get.find<ProviderProfileController>();
+
+    return Obx(() {
+      final user = controller.user.value;
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildSectionTitle(context, "My Information", "Edit"),
+          const SizedBox(height: 15),
+
+          if (controller.isLoading.value && user == null)
+            ..._buildLoadingInfoItems()
+          else if (user != null)
+            ..._buildUserInfoItems(context, user)
+          else
+            _buildErrorState(context),
+        ],
+      );
+    });
+  }
+
+  List<Widget> _buildUserInfoItems(BuildContext context, UserModel user) {
+    return [
+      _buildInfoWithSvg(context, 'assets/profile/person.svg', user.fullName),
+      _buildInfoWithSvg(context, 'assets/profile/person.svg', user.businessNameRegistered),
+      if (user.businessNameDBA.isNotEmpty)
+        _buildInfoWithSvg(context, 'assets/profile/person.svg', "DBA: ${user.businessNameDBA}"),
+      _buildInfoWithSvg(context, 'assets/profile/person.svg', user.providerRole),
+      _buildInfoWithSvg(context, 'assets/profile/location.svg', user.fullAddress),
+      _buildInfoWithSvg(context, 'assets/profile/phone.svg', user.phone),
+      _buildInfoWithSvg(context, 'assets/profile/mail.svg', user.email),
+      _buildInfoWithSvg(context, 'assets/profile/mail.svg', user.website.isNotEmpty ? user.website : "Not provided"),
+      _buildInfoWithSvg(context, 'assets/profile/mail.svg', "Service Areas: ${user.serviceAreasFormatted}"),
+      _buildInfoWithTimeAndSvg(
+          context,
+          'assets/profile/calender.svg',
+          user.serviceDaysFormatted,
+          user.workingHoursFormatted
+      ),
+      _buildInfoWithSvg(context, 'assets/profile/calender.svg', "Experience: ${user.experience} years"),
+    ];
+  }
+
+  List<Widget> _buildLoadingInfoItems() {
+    return List.generate(8, (index) => _buildShimmerInfo());
+  }
+
+  Widget _buildShimmerInfo() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        children: [
+          Container(
+            width: 18,
+            height: 18,
+            decoration: BoxDecoration(
+              color: Colors.grey[300],
+              borderRadius: BorderRadius.circular(4),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Container(
+              height: 16,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorState(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.red[50],
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.error_outline, color: Colors.red[400]),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'Failed to load profile information',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Colors.red[700],
+              ),
+            ),
+          ),
+
+
+        ],
+      ),
     );
   }
 

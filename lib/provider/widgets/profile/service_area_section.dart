@@ -1,4 +1,8 @@
+// widgets/profile/service_area_section.dart
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import '../../controllers/ProviderProfileController.dart';
+
 import '../../screens/profile/service_area_screen.dart';
 
 class ServiceAreaSection extends StatelessWidget {
@@ -6,21 +10,57 @@ class ServiceAreaSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildSectionTitle(context, "Service Area (Zip code)", "Edit"),
-        const SizedBox(height: 15),
-        Wrap(
-          spacing: 10,
-          runSpacing: 10,
-          children: const [
-            ZipTag("62704"),
-            ZipTag("62703"),
-            ZipTag("62705"),
-          ],
+    final ProviderProfileController controller = Get.find<ProviderProfileController>();
+
+    return Obx(() {
+      final user = controller.user.value;
+      final serviceAreas = user?.serviceAreas ?? [];
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildSectionTitle(context, "Service Area (Zip code)", "Edit"),
+          const SizedBox(height: 15),
+
+          if (controller.isLoading.value && user == null)
+            _buildServiceAreasShimmer()
+          else if (serviceAreas.isEmpty)
+            _buildEmptyState(context)
+          else
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: serviceAreas.map((area) => ZipTag(area.zipCode)).toList(),
+            ),
+        ],
+      );
+    });
+  }
+
+  Widget _buildServiceAreasShimmer() {
+    return Wrap(
+      spacing: 10,
+      runSpacing: 10,
+      children: List.generate(3, (index) => const ZipShimmer()),
+    );
+  }
+
+  Widget _buildEmptyState(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(8),
+
+      ),
+      child: Center(
+        child: Text(
+          "No service areas added",
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color: Colors.grey[600],
+          ),
         ),
-      ],
+      ),
     );
   }
 
@@ -84,6 +124,27 @@ class ZipTag extends StatelessWidget {
           fontSize: 12,
           fontWeight: FontWeight.w500,
         ),
+      ),
+    );
+  }
+}
+
+class ZipShimmer extends StatelessWidget {
+  const ZipShimmer({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(8),
+        color: Colors.white,
+      ),
+      child: Container(
+        width: 50,
+        height: 12,
+        color: Colors.grey[300],
       ),
     );
   }

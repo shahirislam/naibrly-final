@@ -26,6 +26,162 @@ class RequestCard extends StatelessWidget {
     }
   }
 
+  void _showAcceptDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withOpacity(0.5),
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Close button
+                Align(
+                  alignment: Alignment.topRight,
+                  child: GestureDetector(
+                    onTap: () => Navigator.of(context).pop(),
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: Colors.black,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: const Icon(
+                        Icons.close,
+                        color: Colors.white,
+                        size: 16,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Service name and price
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        '${request.serviceName}: ',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      '\$${request.pricePerHour.toInt()}/hr',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF0E7A60),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+
+                // Client info
+                Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 20,
+                      backgroundImage: AssetImage(request.clientImage),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            request.clientName,
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black,
+                            ),
+                          ),
+                          Text(
+                            '★ ${request.clientRating} (${request.clientReviewCount} reviews)',
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Colors.black,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+
+                // Date and time
+                Text(
+                  'Date: ${_formatDate(request.date)}, Time: ${request.time}',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: KoreColors.textLight,
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Problem note
+                if (request.problemNote != null) ...[
+                  Text(
+                    'Problem Note for ${request.serviceName}',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    request.problemNote!,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: KoreColors.textLight,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                ],
+
+                // Action buttons
+                Row(
+                  children: [
+                    Expanded(
+                      child: KoreButton(
+                        text: 'Decline',
+                        onPressed: () => Navigator.of(context).pop(),
+                        isPrimary: false,
+                        isCancel: true,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: KoreButton(
+                        text: 'Accept',
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          onAccept?.call();
+                        },
+                        isPrimary: true,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildDetailedPendingCard(BuildContext context) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
@@ -69,7 +225,7 @@ class RequestCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          
+
           // Client info
           Row(
             children: [
@@ -106,7 +262,7 @@ class RequestCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          
+
           // Address
           Row(
             children: [
@@ -130,7 +286,7 @@ class RequestCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-          
+
           // Date and time
           Row(
             children: [
@@ -150,7 +306,7 @@ class RequestCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          
+
           // Problem note
           if (request.problemNote != null) ...[
             Text(
@@ -169,7 +325,7 @@ class RequestCard extends StatelessWidget {
             ),
             const SizedBox(height: 16),
           ],
-          
+
           // Action buttons
           Row(
             children: [
@@ -185,7 +341,7 @@ class RequestCard extends StatelessWidget {
               Expanded(
                 child: KoreButton(
                   text: 'Accept',
-                  onPressed: onAccept ?? () {},
+                  onPressed: () => _showAcceptDialog(context),
                   isPrimary: true,
                 ),
               ),
@@ -220,7 +376,7 @@ class RequestCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 4),
-          
+
           // Bundle type
           Text(
             request.bundleType ?? '',
@@ -229,7 +385,7 @@ class RequestCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          
+
           // Team members
           Row(
             children: [
@@ -263,7 +419,7 @@ class RequestCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          
+
           // Date and time
           Row(
             children: [
@@ -289,7 +445,7 @@ class RequestCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-          
+
           // Price
           Text(
             '\$${request.pricePerHour.toInt()}/hr',
@@ -299,11 +455,11 @@ class RequestCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          
+
           // Accept button
           KoreButton(
             text: 'Accept',
-            onPressed: onAccept ?? () {},
+            onPressed: () => _showAcceptDialog(context),
             isPrimary: true,
           ),
         ],
@@ -344,8 +500,8 @@ class RequestCard extends StatelessWidget {
                   return Container(
                     color: KoreColors.lightGreen,
                     child: Icon(
-                      request.serviceType == ServiceType.windowWashing 
-                          ? Icons.cleaning_services 
+                      request.serviceType == ServiceType.windowWashing
+                          ? Icons.cleaning_services
                           : Icons.build,
                       color: KoreColors.container1,
                       size: 24,
@@ -356,7 +512,7 @@ class RequestCard extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 12),
-          
+
           // Service details
           Expanded(
             child: Column(
@@ -409,7 +565,7 @@ class RequestCard extends StatelessWidget {
               ],
             ),
           ),
-          
+
           // Accepted tag
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),

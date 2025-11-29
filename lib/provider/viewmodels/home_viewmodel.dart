@@ -9,7 +9,7 @@ class HomeViewModel extends ChangeNotifier {
   List<ServiceRequest> _activeRequests = [];
   List<ServiceRequest> _acceptedRequests = [];
   Analytics _analytics = Analytics.demo();
-  List<ClientFeedback> _allClientFeedback = ClientFeedback.demo();
+
   List<ClientFeedback> _clientFeedback = [];
   int _currentPhase = 0; // 0: detailed pending, 1: team pending, 2: accepted list
   int _feedbackPage = 0;
@@ -30,7 +30,7 @@ class HomeViewModel extends ChangeNotifier {
   void _initializeData() {
     // Initialize with different phases based on current state
     _loadPhaseData();
-    _loadFeedbackPage();
+
   }
 
   void _loadPhaseData() {
@@ -90,7 +90,7 @@ class HomeViewModel extends ChangeNotifier {
         teamMembers: _activeRequests[requestIndex].teamMembers,
         bundleType: _activeRequests[requestIndex].bundleType,
       );
-      
+
       _activeRequests[requestIndex] = updatedRequest;
       notifyListeners();
     }
@@ -101,40 +101,13 @@ class HomeViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void _loadFeedbackPage() {
-    final startIndex = 0;
-    final endIndex = ((_feedbackPage + 1) * _feedbackPageSize).clamp(0, _allClientFeedback.length);
-    
-    if (startIndex < _allClientFeedback.length) {
-      _clientFeedback = _allClientFeedback.sublist(startIndex, endIndex);
-    }
+
     notifyListeners();
   }
 
-  void loadMoreFeedback() {
-    _feedbackPage++;
-    _loadFeedbackPage();
-  }
 
-  bool get hasMoreFeedback {
-    final currentCount = (_feedbackPage + 1) * _feedbackPageSize;
-    return currentCount < _allClientFeedback.length;
-  }
 
-  void toggleFeedbackExpansion(String feedbackId) {
-    final feedbackIndex = _clientFeedback.indexWhere((fb) => fb.id == feedbackId);
-    if (feedbackIndex != -1) {
-      final feedback = _clientFeedback[feedbackIndex];
-      _clientFeedback[feedbackIndex] = ClientFeedback(
-        id: feedback.id,
-        clientName: feedback.clientName,
-        clientImage: feedback.clientImage,
-        rating: feedback.rating,
-        comment: feedback.comment,
-        date: feedback.date,
-        isExpanded: !feedback.isExpanded,
-      );
-      notifyListeners();
-    }
-  }
-}
+
+
+
+
